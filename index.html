@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#2D5016">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Wochenplan">
+  <title>Wochenplan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --green:       #2D5016;
+      --green-mid:   #5A8A2E;
+      --green-light: #EBF0E3;
+      --coral:       #C45231;
+      --coral-light: #FAEDE8;
+      --blue:        #2A5580;
+      --blue-light:  #E5EFF7;
+      --amber:       #C17B2A;
+      --amber-light: #FBF0E0;
+      --bg:          #F5F2ED;
+      --surface:     #FDFBF8;
+      --surface2:    #EDE9E2;
+      --text:        #1A1A18;
+      --text2:       #5A5850;
+      --text3:       #9A9788;
+      --border:      rgba(0,0,0,0.09);
+      --radius:      14px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+      height: 100%;
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overscroll-behavior: none;
+    }
+
+    .app {
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ─────────────────────────────────────── */
+    .header {
+      background: var(--green);
+      color: white;
+      padding: env(safe-area-inset-top, 0) 20px 0;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 0 14px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      width: 34px;
+      height: 34px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .brand-text .title {
+      font-family: 'Lora', serif;
+      font-size: 20px;
+      font-weight: 500;
+    }
+
+    .brand-text .subtitle {
+      font-size: 11px;
+      color: rgba(255,255,255,0.55);
+      margin-top: 1px;
+    }
+
+    .refresh-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      border: none;
+      background: rgba(255,255,255,0.15);
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .refresh-btn:active { background: rgba(255,255,255,0.28); }
+    .refresh-btn:disabled { opacity: 0.4; }
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 0 0 12px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      padding-top: 10px;
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: rgba(255,255,255,0.3);
+    }
+    .dot.ok    { background: #8BC34A; }
+    .dot.cache { background: var(--amber); }
+    .dot.err   { background: var(--coral); }
+    .dot.load  { animation: blink 1s ease-in-out infinite; background: rgba(255,255,255,0.6); }
+
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+    @keyframes spin  { to{transform:rotate(360deg)} }
+    .spinning { animation: spin .7s linear infinite; display: inline-block; }
+
+    .status-text { font-size: 12px; color: rgba(255,255,255,0.65); }
+
+    /* ── Summary pills ──────────────────────────────── */
+    .pills {
+      display: flex;
+      gap: 8px;
+      padding: 14px 16px 8px;
+    }
+
+    .pill {
+      flex: 1;
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 6px;
+      text-align: center;
+    }
+
+    .pill-val { font-size: 16px; font-weight: 500; }
+    .pill-lbl { font-size: 10px; color: var(--text3); margin-top: 2px; }
+
+    /* ── Cards ──────────────────────────────────────── */
+    .cards {
+      flex: 1;
+      padding: 4px 16px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    .card.today {
+      border-left: 3px solid var(--green-mid);
+      padding-left: 14px;
+    }
+
+    .day-col { min-width: 40px; flex-shrink: 0; padding-top: 2px; }
+
+    .day-short {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--text3);
+    }
+
+    .day-num { font-size: 15px; font-weight: 500; margin-top: 2px; }
+
+    .today-dot {
+      width: 6px; height: 6px;
+      background: var(--green-mid);
+      border-radius: 50%;
+      margin-top: 5px;
+    }
+
+    .meal-col { flex: 1; min-width: 0; }
+
+    .meal-name {
+      font-family: 'Lora', serif;
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 1.35;
+    }
+
+    .meal-desc {
+      font-size: 12px;
+      color: var(--text2);
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 2px 8px;
+      border-radius: 20px;
+      margin-top: 8px;
+    }
+    .badge-fish { background: var(--blue-light);  color: var(--blue); }
+    .badge-meat { background: var(--coral-light); color: var(--coral); }
+    .badge-veg  { background: var(--green-light); color: var(--green); }
+
+    /* ── Leer- / Fehlerzustand ──────────────────────── */
+    .empty {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 48px 24px;
+      gap: 10px;
+    }
+    .empty-icon  { font-size: 40px; }
+    .empty-title { font-size: 16px; font-weight: 500; color: var(--text2); }
+    .empty-sub   { font-size: 13px; color: var(--text3); line-height: 1.7; }
+    .empty-sub code {
+      background: var(--surface2);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-size: 12px;
+      color: var(--text2);
+    }
+
+    /* ── Footer ─────────────────────────────────────── */
+    .footer {
+      text-align: center;
+      font-size: 11px;
+      color: var(--text3);
+      padding: 8px 20px;
+      padding-bottom: calc(8px + env(safe-area-inset-bottom, 0));
+      border-top: 0.5px solid var(--border);
+      background: var(--surface);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:          #1A1C17;
+        --surface:     #23261E;
+        --surface2:    #2C2F26;
+        --green-light: #1E2A14;
+        --coral-light: #2A1810;
+        --blue-light:  #0E1E2E;
+        --amber-light: #2A2010;
+        --text:        #F0EDE5;
+        --text2:       #A8A598;
+        --text3:       #686660;
+        --border:      rgba(255,255,255,0.08);
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <div class="header-row">
+      <div class="brand">
+        <div class="brand-icon">🍽️</div>
+        <div class="brand-text">
+          <div class="title">Wochenplan</div>
+          <div class="subtitle" id="week-label"></div>
+        </div>
+      </div>
+      <button class="refresh-btn" id="refresh-btn" onclick="loadCSV()" title="Aktualisieren">
+        <span id="refresh-icon">↻</span>
+      </button>
+    </div>
+    <div class="status-row">
+      <div class="dot" id="dot"></div>
+      <div class="status-text" id="status-text">Wird geladen …</div>
+    </div>
+  </div>
+
+  <div class="pills" id="pills" style="display:none">
+    <div class="pill"><div class="pill-val" id="p-fish">–</div><div class="pill-lbl">Fisch</div></div>
+    <div class="pill"><div class="pill-val" id="p-meat">–</div><div class="pill-lbl">Fleisch</div></div>
+    <div class="pill"><div class="pill-val" id="p-total">–</div><div class="pill-lbl">Gerichte</div></div>
+  </div>
+
+  <div class="cards" id="cards"></div>
+
+  <div class="footer" id="footer"></div>
+
+</div>
+<script>
+// ── Konfiguration ────────────────────────────────────────────────────────────
+//
+//  Die CSV wird relativ geladen: "./plan.csv"
+//  Das funktioniert, wenn beide Dateien im gleichen GitHub-Repository liegen
+//  und über GitHub Pages aufgerufen werden:
+//
+//    https://DEIN-NAME.github.io/DEIN-REPO/
+//
+//  Lokales Testen: python3 -m http.server 8080  → http://localhost:8080
+//
+const CSV_PATH  = './plan.csv';
+const CACHE_KEY = 'wochenplan_rows';
+const TS_KEY    = 'wochenplan_ts';
+
+// ── Hilfsfunktionen ──────────────────────────────────────────────────────────
+
+const DAYS_LONG  = ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'];
+const DAYS_SHORT = ['Mo','Di','Mi','Do','Fr','Sa','So'];
+
+function parseCSV(text) {
+  var lines  = text.trim().split(/\r?\n/);
+  var header = lines[0].split(',').map(function(h){ return h.trim(); });
+  return lines.slice(1).filter(function(l){ return l.trim(); }).map(function(line) {
+    // Einfaches CSV-Parsing (kein Quoting nötig für aktuelle Daten)
+    var cols = line.split(',').map(function(c){ return c.trim(); });
+    var obj  = {};
+    header.forEach(function(h, i){ obj[h] = cols[i] || ''; });
+    return obj;
+  });
+}
+
+function getMondayOfWeek() {
+  var now = new Date();
+  var dow = now.getDay();
+  var mon = new Date(now);
+  mon.setDate(now.getDate() - (dow === 0 ? 6 : dow - 1));
+  mon.setHours(0, 0, 0, 0);
+  return mon;
+}
+
+function getISOWeek(d) {
+  var dt = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  dt.setUTCDate(dt.getUTCDate() + 4 - (dt.getUTCDay() || 7));
+  var y = new Date(Date.UTC(dt.getUTCFullYear(), 0, 1));
+  return Math.ceil(((dt - y) / 86400000 + 1) / 7);
+}
+
+function isToday(d) {
+  var t = new Date();
+  return d.getDate() === t.getDate()
+      && d.getMonth() === t.getMonth()
+      && d.getFullYear() === t.getFullYear();
+}
+
+function fmtD(d) { return d.getDate() + '.' + (d.getMonth() + 1) + '.'; }
+
+function fmtTs(iso) {
+  if (!iso) return '–';
+  var d = new Date(iso), t = new Date();
+  var time = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+  return d.toDateString() === t.toDateString()
+    ? 'Heute ' + time + ' Uhr'
+    : d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }) + ' · ' + time + ' Uhr';
+}
+
+function detectType(name) {
+  var n = (name || '').toLowerCase();
+  if (/kabeljau|fischfilet|lachs|forelle|thunfisch|seelachs|garnelen|krabben/.test(n)) return 'fish';
+  if (/hackfleisch|puten|hühnchen|huhn|schwein|rind|cordon|schnitzel|lamm|spare|gulasch/.test(n)) return 'meat';
+  if (/tofu|linsen|kichererbsen|veggie|buddha|ratatouille|shakshuka/.test(n)) return 'veg';
+  return '';
+}
+
+// ── Status-UI ────────────────────────────────────────────────────────────────
+
+function setStatus(type, msg) {
+  document.getElementById('dot').className         = 'dot ' + type;
+  document.getElementById('status-text').textContent = msg;
+  var icon = document.getElementById('refresh-icon');
+  icon.className   = type === 'load' ? 'spinning' : '';
+  icon.textContent = '↻';
+  document.getElementById('refresh-btn').disabled  = type === 'load';
+}
+
+// ── Rendern ──────────────────────────────────────────────────────────────────
+
+function render(rows) {
+  var mon   = getMondayOfWeek();
+  var kw    = getISOWeek(mon);
+  var sun   = new Date(mon); sun.setDate(mon.getDate() + 6);
+
+  document.getElementById('week-label').textContent =
+    'KW ' + kw + ' · ' + fmtD(mon) + ' – ' + fmtD(sun) + ' ' + sun.getFullYear();
+
+  // Zeilen nach Tagname indizieren
+  var byDay = {};
+  rows.forEach(function(r) {
+    var key = (r['Tag'] || '').trim().toLowerCase();
+    byDay[key] = r;
+  });
+
+  var fish = 0, meat = 0, total = 0, html = '';
+
+  DAYS_LONG.forEach(function(day, i) {
+    var date  = new Date(mon);
+    date.setDate(mon.getDate() + i);
+    var today = isToday(date);
+    var row   = byDay[day.toLowerCase()];
+    if (!row) return;
+
+    total++;
+    var type = detectType(row['Gericht']);
+    if (type === 'fish') fish++;
+    if (type === 'meat') meat++;
+
+    var desc   = [row['Beilage'], row['Gemüse']].filter(Boolean).join(' · ');
+    var badge  = type === 'fish'  ? '<span class="badge badge-fish">Fisch</span>'
+               : type === 'meat'  ? '<span class="badge badge-meat">Fleisch</span>'
+               : type === 'veg'   ? '<span class="badge badge-veg">Vegetarisch</span>'
+               : '';
+
+    html +=
+      '<div class="card' + (today ? ' today' : '') + '">' +
+        '<div class="day-col">' +
+          '<div class="day-short">' + DAYS_SHORT[i] + '</div>' +
+          '<div class="day-num">' + date.getDate() + '.</div>' +
+          (today ? '<div class="today-dot"></div>' : '') +
+        '</div>' +
+        '<div class="meal-col">' +
+          '<div class="meal-name">' + (row['Gericht'] || '–') + '</div>' +
+          (desc ? '<div class="meal-desc">' + desc + '</div>' : '') +
+          badge +
+        '</div>' +
+      '</div>';
+  });
+
+  document.getElementById('cards').innerHTML = html ||
+    '<div class="empty"><div class="empty-icon">📋</div>' +
+    '<div class="empty-title">Keine Einträge</div>' +
+    '<div class="empty-sub">Die CSV enthält keine erkennbaren Zeilen.</div></div>';
+
+  document.getElementById('p-fish').textContent  = fish + '×';
+  document.getElementById('p-meat').textContent  = meat + '×';
+  document.getElementById('p-total').textContent = total;
+  document.getElementById('pills').style.display = 'flex';
+}
+
+// ── CSV laden ────────────────────────────────────────────────────────────────
+
+async function loadCSV() {
+  setStatus('load', 'Wird geladen …');
+  try {
+    var resp = await fetch(CSV_PATH, { cache: 'no-store' });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    var text = await resp.text();
+    var rows = parseCSV(text);
+    if (rows.length === 0) throw new Error('CSV ist leer');
+
+    localStorage.setItem(CACHE_KEY, JSON.stringify(rows));
+    localStorage.setItem(TS_KEY, new Date().toISOString());
+
+    render(rows);
+    setStatus('ok', 'Geladen · ' + fmtTs(localStorage.getItem(TS_KEY)));
+    document.getElementById('footer').textContent =
+      'plan.csv · ' + fmtTs(localStorage.getItem(TS_KEY));
+
+  } catch (err) {
+    var cached = localStorage.getItem(CACHE_KEY);
+    var ts     = localStorage.getItem(TS_KEY);
+
+    if (cached) {
+      render(JSON.parse(cached));
+      setStatus('cache', 'Aus Cache · ' + fmtTs(ts));
+      document.getElementById('footer').textContent =
+        'Gespeicherter Plan · ' + fmtTs(ts);
+    } else {
+      setStatus('err', 'Fehler beim Laden');
+      document.getElementById('pills').style.display = 'none';
+      document.getElementById('footer').textContent  = '';
+
+      var isLocal = location.protocol === 'file:';
+      document.getElementById('cards').innerHTML =
+        '<div class="empty">' +
+          '<div class="empty-icon">⚠️</div>' +
+          '<div class="empty-title">CSV konnte nicht geladen werden</div>' +
+          '<div class="empty-sub">' +
+            (isLocal
+              ? 'Lokal nicht aufrufbar.<br>Starte einen lokalen Server:<br>' +
+                '<code>python3 -m http.server 8080</code><br>' +
+                'Dann: <code>http://localhost:8080</code>'
+              : 'Stelle sicher, dass <code>plan.csv</code><br>' +
+                'im gleichen Repository liegt.<br>Fehler: ' + err.message) +
+          '</div>' +
+        '</div>';
+    }
+  }
+}
+
+// ── Start ────────────────────────────────────────────────────────────────────
+loadCSV();
+</script>
+</body>
+</html>
