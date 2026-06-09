@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#2D5016">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Wochenplan">
+  <title>Wochenplan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --green:       #2D5016;
+      --green-mid:   #5A8A2E;
+      --green-light: #EBF0E3;
+      --coral:       #C45231;
+      --coral-light: #FAEDE8;
+      --blue:        #2A5580;
+      --blue-light:  #E5EFF7;
+      --amber:       #C17B2A;
+      --amber-light: #FBF0E0;
+      --bg:          #F5F2ED;
+      --surface:     #FDFBF8;
+      --surface2:    #EDE9E2;
+      --text:        #1A1A18;
+      --text2:       #5A5850;
+      --text3:       #9A9788;
+      --border:      rgba(0,0,0,0.09);
+      --radius:      22px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+      height: 100%;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--text);
+      overscroll-behavior: none;
+    }
+
+    body {
+      background-image: url('./YogaBackground.jpg');
+      background-size: cover;
+      background-position: center top;
+      background-attachment: scroll;
+      background-color: var(--bg);
+    }
+
+    .app {
+      max-width: 480px;
+      margin: 0 auto;
+      height: 100dvh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ─────────────────────────────────────── */
+    .header {
+      background: var(--green);
+      color: white;
+      padding: env(safe-area-inset-top, 0) 20px 0;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 0 12px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      width: 34px; height: 34px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+
+    .brand-text .title {
+      font-family: 'Lora', serif;
+      font-size: 20px;
+      font-weight: 500;
+    }
+
+    .brand-text .subtitle {
+      font-size: 11px;
+      color: rgba(255,255,255,0.5);
+      margin-top: 1px;
+    }
+
+    .refresh-btn {
+      width: 36px; height: 36px;
+      border-radius: 8px; border: none;
+      background: rgba(255,255,255,0.15);
+      color: white; font-size: 18px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .refresh-btn:active { background: rgba(255,255,255,0.28); }
+    .refresh-btn:disabled { opacity: 0.4; }
+
+    /* ── Week navigation ────────────────────────────── */
+    .week-nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 0 10px;
+    }
+
+    .nav-btn {
+      flex-shrink: 0;
+      width: 34px; height: 34px;
+      border: none;
+      background: rgba(255,255,255,0.12);
+      color: white;
+      border-radius: 8px;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+    }
+    .nav-btn:active { background: rgba(255,255,255,0.28); }
+    .nav-btn:disabled { opacity: 0.25; pointer-events: none; }
+
+    .week-center {
+      flex: 1;
+      text-align: center;
+    }
+
+    .week-dates {
+      font-size: 13px;
+      color: rgba(255,255,255,0.9);
+      font-weight: 400;
+    }
+
+    .week-pips {
+      display: flex;
+      gap: 5px;
+      justify-content: center;
+      margin-top: 5px;
+    }
+
+    .pip {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.22);
+      transition: background 0.2s, transform 0.15s;
+    }
+    .pip.on {
+      background: rgba(255,255,255,0.9);
+      transform: scale(1.2);
+    }
+
+    /* ── Gruppen-Leiste ─────────────────────────────── */
+    .group-bar {
+      display: flex;
+      gap: 8px;
+      padding: 0 0 10px;
+      align-items: center;
+    }
+
+    .group-select {
+      flex: 1;
+      background: rgba(255,255,255,0.15);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 13px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .group-select option { color: var(--text); background: var(--surface); }
+
+    .group-add-btn {
+      width: 30px; height: 30px;
+      border: none;
+      background: rgba(255,255,255,0.15);
+      color: white;
+      border-radius: 8px;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .group-add-btn:active { background: rgba(255,255,255,0.28); }
+
+    /* ── Status row ─────────────────────────────────── */
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 0 12px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: rgba(255,255,255,0.3);
+    }
+    .dot.ok    { background: #8BC34A; }
+    .dot.cache { background: var(--amber); }
+    .dot.err   { background: var(--coral); }
+    .dot.load  { animation: blink 1s ease-in-out infinite; background: rgba(255,255,255,0.6); }
+
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+    @keyframes spin  { to{transform:rotate(360deg)} }
+    .spinning { animation: spin .7s linear infinite; display: inline-block; }
+
+    .status-text { font-size: 12px; color: rgba(255,255,255,0.65); }
+
+    /* ── Summary pills ──────────────────────────────── */
+    .pills {
+      display: flex;
+      gap: 8px;
+      padding: 14px 16px 8px;
+    }
+
+    .pill {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.22);
+      backdrop-filter: blur(20px) saturate(160%);
+      -webkit-backdrop-filter: blur(20px) saturate(160%);
+      border: 1px solid rgba(255, 255, 255, 0.48);
+      border-radius: 16px;
+      padding: 8px 6px;
+      text-align: center;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.55);
+    }
+
+    .pill-val { font-size: 16px; font-weight: 500; }
+    .pill-lbl { font-size: 10px; color: var(--text3); margin-top: 2px; }
+
+    /* ── Cards ──────────────────────────────────────── */
+    .cards {
+      flex: 1;
+      overflow-y: scroll;
+      -webkit-overflow-scrolling: touch;
+      scroll-behavior: smooth;
+      padding: 4px 16px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* ── Snap-Karten-Modus ──────────────────────────── */
+    .cards.view-card {
+      scroll-snap-type: y mandatory;
+      gap: 0;
+      padding: 0;
+    }
+
+    .cards.view-card .card {
+      min-height: var(--snap-h, 70vh);
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 14px;
+      border-radius: 0;
+      border-left: none;
+      border-right: none;
+      padding: 36px 28px;
+      cursor: default;
+    }
+
+    .cards.view-card .card.today {
+      border-left: none;
+      padding-left: 28px;
+    }
+
+    .cards.view-card .day-col {
+      display: flex;
+      flex-direction: row;
+      gap: 10px;
+      align-items: baseline;
+      min-width: unset;
+      padding-top: 0;
+    }
+    .cards.view-card .day-short { font-size: 13px; letter-spacing: .1em; }
+    .cards.view-card .day-num   { font-size: 20px; font-weight: 500; margin-top: 0; }
+    .cards.view-card .today-dot { margin-top: 0; align-self: center; }
+    .cards.view-card .meal-name { font-size: 30px; line-height: 1.2; }
+    .cards.view-card .meal-desc { font-size: 15px; margin-top: 6px; }
+    .cards.view-card .badge     { font-size: 13px; padding: 4px 14px; margin-top: 10px; }
+    .cards.view-card .card-chevron { display: none; }
+    .cards.view-card .meal-col  { width: 100%; }
+
+    /* ── Karten-Details (Nährwerte + Mengen + Edit) ─── */
+    .card-extra { display: none; }
+
+    .cards.view-card .card-extra {
+      display: block;
+      width: 100%;
+      margin-top: 4px;
+    }
+
+    .cards.view-card .nut-box {
+      background: rgba(255,255,255,0.18);
+    }
+
+    .card-edit-btn {
+      display: inline-block;
+      margin-top: 20px;
+      background: rgba(255,255,255,0.22);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.4);
+      border-radius: 14px;
+      padding: 10px 22px;
+      font-size: 14px;
+      font-family: inherit;
+      cursor: pointer;
+      color: var(--text);
+    }
+    .card-edit-btn:active { background: rgba(255,255,255,0.38); }
+
+    /* ── View-Toggle-Button ─────────────────────────── */
+    .view-toggle-btn {
+      height: 36px;
+      padding: 0 14px;
+      border-radius: 8px;
+      border: none;
+      background: rgba(255,255,255,0.15);
+      color: white;
+      font-size: 13px;
+      font-family: inherit;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .view-toggle-btn:active { background: rgba(255,255,255,0.28); }
+
+    .card {
+      background: rgba(255, 255, 255, 0.22);
+      backdrop-filter: blur(20px) saturate(160%);
+      -webkit-backdrop-filter: blur(20px) saturate(160%);
+      border: 1px solid rgba(255, 255, 255, 0.48);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      cursor: pointer;
+      transition: background 0.15s, box-shadow 0.15s;
+      user-select: none;
+      box-shadow:
+        0 4px 24px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.55);
+    }
+    .card:active {
+      background: rgba(255, 255, 255, 0.38);
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+    }
+
+    .card.today {
+      border-left: 3px solid var(--green-mid);
+      padding-left: 14px;
+      background: rgba(90, 138, 46, 0.18);
+      border-color: rgba(139, 195, 74, 0.5);
+    }
+
+    .card.drag-over {
+      border: 2px dashed var(--green-mid) !important;
+      opacity: 0.7;
+    }
+
+    .day-col { min-width: 40px; flex-shrink: 0; padding-top: 2px; }
+
+    .day-short {
+      font-size: 11px; font-weight: 500;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--text3);
+    }
+
+    .day-num { font-size: 15px; font-weight: 500; margin-top: 2px; }
+
+    .today-dot {
+      width: 6px; height: 6px;
+      background: var(--green-mid);
+      border-radius: 50%;
+      margin-top: 5px;
+    }
+
+    .meal-col { flex: 1; min-width: 0; }
+
+    .meal-name {
+      font-family: 'Lora', serif;
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 1.35;
+    }
+
+    .meal-desc {
+      font-size: 12px;
+      color: var(--text2);
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 11px; font-weight: 500;
+      padding: 2px 8px;
+      border-radius: 20px;
+      margin-top: 8px;
+    }
+    .badge-fish { background: var(--blue-light);  color: var(--blue); }
+    .badge-meat { background: var(--coral-light); color: var(--coral); }
+    .badge-veg  { background: var(--green-light); color: var(--green); }
+
+    .card-chevron {
+      flex-shrink: 0;
+      font-size: 14px;
+      color: var(--text3);
+      align-self: center;
+      margin-left: 4px;
+    }
+
+    /* ── FAB ────────────────────────────────────────── */
+    .fab {
+      position: fixed;
+      bottom: calc(24px + env(safe-area-inset-bottom, 0));
+      right: max(calc(50% - 240px + 16px), 16px);
+      width: 52px; height: 52px;
+      border-radius: 50%; border: none;
+      background: var(--green);
+      color: white;
+      font-size: 28px;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+      z-index: 9;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .fab:active { opacity: 0.85; }
+
+    /* ── Empty / Error ──────────────────────────────── */
+    .empty {
+      flex: 1;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center;
+      padding: 48px 24px;
+      gap: 10px;
+    }
+    .empty-icon  { font-size: 40px; }
+    .empty-title { font-size: 16px; font-weight: 500; color: var(--text2); }
+    .empty-sub   { font-size: 13px; color: var(--text3); line-height: 1.7; }
+    .empty-sub code {
+      background: var(--surface2);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-size: 12px;
+      color: var(--text2);
+    }
+
+    /* ── Footer ─────────────────────────────────────── */
+    .footer { display: none; }
+
+    /* ── Modal overlay ──────────────────────────────── */
+    .overlay {
+      position: fixed; inset: 0; z-index: 50;
+      background: rgba(0,0,0,0);
+      pointer-events: none;
+      transition: background 0.25s;
+    }
+    .overlay.show {
+      background: rgba(0,0,0,0.45);
+      pointer-events: auto;
+    }
+
+    /* ── Bottom sheet ───────────────────────────────── */
+    .sheet {
+      position: fixed; bottom: 0; left: 50%;
+      transform: translateX(-50%) translateY(105%);
+      width: 100%; max-width: 480px;
+      background: var(--surface);
+      border-radius: 20px 20px 0 0;
+      z-index: 51;
+      padding-bottom: max(env(safe-area-inset-bottom, 0px), 16px);
+      box-shadow: 0 -8px 48px rgba(0,0,0,0.18);
+      transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+      max-height: 90dvh;
+      overflow-y: auto;
+    }
+    .sheet.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .sheet-grip {
+      width: 40px; height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin: 10px auto 0;
+    }
+
+    .sheet-inner { padding: 14px 20px 24px; }
+
+    .sheet-kicker { margin-bottom: 6px; }
+
+    .sheet-name {
+      font-family: 'Lora', serif;
+      font-size: 22px; font-weight: 400;
+      line-height: 1.3;
+      color: var(--text);
+    }
+
+    .sheet-meta {
+      font-size: 13px;
+      color: var(--text2);
+      margin-top: 5px;
+      line-height: 1.4;
+    }
+
+    .nut-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .nut-box {
+      background: var(--surface2);
+      border-radius: 10px;
+      padding: 10px 5px;
+      text-align: center;
+    }
+    .nut-v {
+      font-size: 14px; font-weight: 500;
+      color: var(--text);
+      white-space: nowrap;
+    }
+    .nut-l {
+      font-size: 10px;
+      color: var(--text3);
+      margin-top: 3px;
+    }
+
+    .mengen-card {
+      margin-top: 14px;
+      border-radius: 10px;
+      padding: 12px 14px;
+      background: var(--green-light);
+    }
+    .mengen-head {
+      font-size: 10px; font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--green-mid);
+      margin-bottom: 6px;
+    }
+    .mengen-body {
+      font-size: 13px;
+      color: var(--text);
+      line-height: 1.7;
+    }
+
+    /* ── Edit-Formular ──────────────────────────────── */
+    .form-label {
+      display: block;
+      font-size: 11px; font-weight: 500;
+      color: var(--text3);
+      margin: 10px 0 4px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+    .form-input {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    .form-input:focus { outline: none; border-color: var(--green-mid); }
+    textarea.form-input { resize: vertical; }
+    .btn-save {
+      flex: 1; background: var(--green); color: white;
+      border: none; border-radius: 10px; padding: 12px;
+      font-size: 15px; cursor: pointer; font-family: inherit;
+    }
+    .btn-save:active { opacity: 0.85; }
+    .btn-cancel {
+      flex: 1; background: var(--surface2); color: var(--text2);
+      border: none; border-radius: 10px; padding: 12px;
+      font-size: 15px; cursor: pointer; font-family: inherit;
+    }
+    .btn-del {
+      background: var(--coral-light); color: var(--coral);
+      border: none; border-radius: 8px; padding: 6px 12px;
+      cursor: pointer; font-size: 13px; font-family: inherit;
+    }
+
+    /* ── Header Collapse ────────────────────────────── */
+    .week-nav,
+    .group-bar,
+    .status-row {
+      overflow: hidden;
+      max-height: 120px;
+      transition: max-height 0.28s ease, opacity 0.2s ease, padding 0.25s ease;
+    }
+    .header.collapsed .week-nav,
+    .header.collapsed .group-bar,
+    .header.collapsed .status-row {
+      max-height: 0;
+      opacity: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+    }
+
+    /* ── Aktions-Sheet Buttons ──────────────────────── */
+    .action-btn {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      width: 100%;
+      padding: 16px 4px;
+      background: none;
+      border: none;
+      border-bottom: 0.5px solid var(--border);
+      font-size: 16px;
+      font-family: inherit;
+      color: var(--text);
+      cursor: pointer;
+      text-align: left;
+    }
+    .action-btn:last-child { border-bottom: none; }
+    .action-btn:active { background: var(--surface2); border-radius: 10px; }
+    .action-icon { font-size: 22px; width: 32px; text-align: center; flex-shrink: 0; }
+
+    /* ── Dark mode ──────────────────────────────────── */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:          #1A1C17;
+        --surface:     #23261E;
+        --surface2:    #2C2F26;
+        --green-light: #1E2A14;
+        --coral-light: #2A1810;
+        --blue-light:  #0E1E2E;
+        --amber-light: #2A2010;
+        --text:        #F0EDE5;
+        --text2:       #A8A598;
+        --text3:       #686660;
+        --border:      rgba(255,255,255,0.08);
+      }
+      .card {
+        background: rgba(28, 32, 22, 0.42);
+        border-color: rgba(255, 255, 255, 0.12);
+        box-shadow: 0 4px 24px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.08);
+      }
+      .card:active {
+        background: rgba(28, 32, 22, 0.58);
+      }
+      .card.today {
+        background: rgba(45, 80, 22, 0.38);
+        border-color: rgba(139, 195, 74, 0.3);
+      }
+      .pill {
+        background: rgba(28, 32, 22, 0.42);
+        border-color: rgba(255, 255, 255, 0.12);
+        box-shadow: 0 2px 12px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.06);
+      }
+      .mengen-card { background: var(--surface2); }
+      .mengen-head { color: #8BC34A; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <div class="header-row">
+      <div class="brand">
+        <div class="brand-icon">🍽️</div>
+        <div class="brand-text">
+          <div class="title">Wochenplan</div>
+          <div class="subtitle">4-Wochen-Plan</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="view-toggle-btn" id="view-toggle-btn" onclick="toggleView()">☰ Liste</button>
+        <button class="refresh-btn" id="refresh-btn" onclick="loadPlan()" title="Aktualisieren">
+          <span id="refresh-icon">↻</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="week-nav">
+      <button class="nav-btn" id="prev-btn" onclick="changeWeek(-1)" title="Vorherige Woche">‹</button>
+      <div class="week-center">
+        <div class="week-dates" id="week-dates"></div>
+        <div class="week-pips" id="week-pips"></div>
+      </div>
+      <button class="nav-btn" id="next-btn" onclick="changeWeek(1)" title="Nächste Woche">›</button>
+    </div>
+
+    <div class="group-bar">
+      <select class="group-select" id="group-select" onchange="onGroupChange(this.value)"></select>
+      <button class="group-add-btn" onclick="createGroup()" title="Neue Gruppe">+</button>
+    </div>
+
+    <div class="status-row">
+      <div class="dot" id="dot"></div>
+      <div class="status-text" id="status-text">Wird geladen …</div>
+    </div>
+  </div>
+
+  <div class="pills" id="pills" style="display:none">
+    <div class="pill"><div class="pill-val" id="p-fish">–</div><div class="pill-lbl">Fisch</div></div>
+    <div class="pill"><div class="pill-val" id="p-meat">–</div><div class="pill-lbl">Fleisch</div></div>
+    <div class="pill"><div class="pill-val" id="p-total">–</div><div class="pill-lbl">Gerichte</div></div>
+  </div>
+
+  <div class="cards" id="cards"></div>
+
+  <button class="fab" onclick="openEdit(null)" title="Neuer Eintrag">+</button>
+
+  <div class="footer" id="footer"></div>
+
+</div>
+
+<div class="overlay" id="overlay" onclick="closeModal()"></div>
+<div class="sheet" id="sheet">
+  <div class="sheet-grip"></div>
+  <div class="sheet-inner" id="sheet-inner"></div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://qvqqjlebpyhgbygekmbz.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_MSBcP5N7rPBottE54OCoIA_QUToigbH';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const CACHE_KEY = 'wochenplan_sb_rows';
+const TS_KEY    = 'wochenplan_sb_ts';
+const GROUP_KEY = 'wochenplan_sb_group';
+
+// KW1 begann Montag 02.06.2026 → heute (08.06.) ist KW2
+const REFERENCE_MONDAY = new Date('2026-06-02T00:00:00');
+
+const DAYS_LONG  = ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'];
+const DAYS_SHORT = ['Mo','Di','Mi','Do','Fr','Sa','So'];
+
+var allWeeks     = [];
+var planIdx      = 0;
+var rowBuffer    = [];
+var currentGroup = null;
+var editingRow   = null;
+var dragSrcIdx   = null;
+var viewMode     = 'card';   // 'card' | 'list'
+var swipeStartX  = 0, swipeStartY = 0, swipeStartT = 0;
+var lpTimer      = null;
+var lpBufIdx     = null;
+var lpFired      = false;
+
+// ── Snap-Höhe & View-Toggle ───────────────────────────────────────────────
+
+function setSnapHeight() {
+  var cards = document.getElementById('cards');
+  var h = cards.clientHeight;
+  if (h > 0) document.documentElement.style.setProperty('--snap-h', h + 'px');
+}
+
+window.addEventListener('resize', function() {
+  setSnapHeight();
+});
+
+function toggleView() {
+  viewMode = viewMode === 'card' ? 'list' : 'card';
+  var btn   = document.getElementById('view-toggle-btn');
+  var cards = document.getElementById('cards');
+  if (viewMode === 'card') {
+    cards.classList.add('view-card');
+    btn.textContent = '☰ Liste';
+    setSnapHeight();
+  } else {
+    cards.classList.remove('view-card');
+    btn.textContent = '⊟ Karte';
+  }
+  render(allWeeks, planIdx);
+}
+
+// ── Scroll → Hintergrund + Header-Collapse ───────────────────────────────
+
+var cardsEl = document.getElementById('cards');
+
+cardsEl.addEventListener('scroll', function() {
+  var maxScroll = Math.max(this.scrollHeight - this.clientHeight, 1);
+  document.body.style.backgroundPositionY =
+    (this.scrollTop / maxScroll * 100).toFixed(1) + '%';
+  document.querySelector('.header').classList.toggle('collapsed', this.scrollTop > 10);
+}, { passive: true });
+
+document.querySelector('.header').addEventListener('transitionend', function(e) {
+  if (e.propertyName === 'max-height') setSnapHeight();
+});
+
+// ── Wischgeste links/rechts → Wochenwechsel ──────────────────────────────
+
+cardsEl.addEventListener('touchstart', function(e) {
+  swipeStartX = e.touches[0].clientX;
+  swipeStartY = e.touches[0].clientY;
+  swipeStartT = Date.now();
+}, { passive: true });
+
+cardsEl.addEventListener('touchend', function(e) {
+  var dx = e.changedTouches[0].clientX - swipeStartX;
+  var dy = e.changedTouches[0].clientY - swipeStartY;
+  var dt = Date.now() - swipeStartT;
+  if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.8 && dt < 400) {
+    changeWeek(dx < 0 ? 1 : -1);
+  }
+}, { passive: true });
+
+// ── Long-Press Handler ────────────────────────────────────────────────────
+
+function onLpStart(e, bufIdx) {
+  lpBufIdx = bufIdx;
+  lpFired  = false;
+  lpTimer  = setTimeout(function() {
+    lpFired = true;
+    if (navigator.vibrate) navigator.vibrate(40);
+    openCardActions(bufIdx);
+  }, 700);
+}
+function onLpEnd()  {
+  clearTimeout(lpTimer);
+  lpTimer = null;
+  setTimeout(function() { lpFired = false; }, 120);
+}
+function onLpMove() { clearTimeout(lpTimer); lpTimer = null; }
+
+// ── Aktions-Sheet ─────────────────────────────────────────────────────────
+
+function openCardActions(bufIdx) {
+  var row = rowBuffer[bufIdx];
+  document.getElementById('sheet-inner').innerHTML =
+    '<div style="font-family:\'Lora\',serif;font-size:18px;margin-bottom:16px">' +
+      esc(row['Gericht'] || '–') +
+    '</div>' +
+    '<button class="action-btn" onclick="closeModal();openMove(' + bufIdx + ')">' +
+      '<span class="action-icon">↕️</span>' +
+      '<div><div>Verschieben</div>' +
+      '<div style="font-size:12px;color:var(--text3)">In andere Woche oder anderen Tag verschieben</div></div>' +
+    '</button>' +
+    '<button class="action-btn" onclick="closeModal();openReplace(' + bufIdx + ')">' +
+      '<span class="action-icon">🔄</span>' +
+      '<div><div>Ersetzen</div>' +
+      '<div style="font-size:12px;color:var(--text3)">Inhalt mit einem anderen Tag tauschen</div></div>' +
+    '</button>' +
+    '<button class="action-btn" onclick="closeModal();openEdit(rowBuffer[' + bufIdx + '])">' +
+      '<span class="action-icon">✏️</span>' +
+      '<div><div>Bearbeiten</div>' +
+      '<div style="font-size:12px;color:var(--text3)">Felder direkt bearbeiten</div></div>' +
+    '</button>' +
+    '<button class="action-btn" onclick="closeModal()" style="color:var(--coral)">' +
+      '<span class="action-icon">✕</span><div>Abbrechen</div>' +
+    '</button>';
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById('sheet').classList.add('show');
+}
+
+// ── Verschieben ───────────────────────────────────────────────────────────
+
+function openMove(bufIdx) {
+  var row = rowBuffer[bufIdx];
+  document.getElementById('sheet-inner').innerHTML =
+    '<div style="font-family:\'Lora\',serif;font-size:18px;margin-bottom:14px">Verschieben</div>' +
+    '<label class="form-label">Ziel-Woche</label>' +
+    '<select id="mv-week" class="form-input">' +
+      [1,2,3,4].map(function(w) {
+        return '<option value="'+w+'"'+(w===row._week?' selected':'')+'>Woche '+w+'</option>';
+      }).join('') +
+    '</select>' +
+    '<label class="form-label">Ziel-Tag</label>' +
+    '<select id="mv-day" class="form-input">' +
+      DAYS_LONG.map(function(d) {
+        return '<option value="'+d+'"'+(d===row['Tag']?' selected':'')+'>'+d+'</option>';
+      }).join('') +
+    '</select>' +
+    '<div style="display:flex;gap:8px;margin-top:16px">' +
+      '<button class="btn-save" onclick="confirmMove(' + bufIdx + ')">Verschieben</button>' +
+      '<button class="btn-cancel" onclick="closeModal()">Abbrechen</button>' +
+    '</div>';
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById('sheet').classList.add('show');
+}
+
+async function confirmMove(bufIdx) {
+  var row     = rowBuffer[bufIdx];
+  var newWeek = parseInt(document.getElementById('mv-week').value);
+  var newDay  = document.getElementById('mv-day').value;
+  var result  = await sb.from('essensplan')
+    .update({ wochen_nr: newWeek, tag: newDay, geaendert: new Date().toISOString() })
+    .eq('id', row._id);
+  if (result.error) { alert('Fehler: ' + result.error.message); return; }
+  closeModal();
+  await loadPlan();
+}
+
+// ── Ersetzen ──────────────────────────────────────────────────────────────
+
+function openReplace(bufIdx) {
+  var row = rowBuffer[bufIdx];
+  document.getElementById('sheet-inner').innerHTML =
+    '<div style="font-family:\'Lora\',serif;font-size:18px;margin-bottom:14px">Ersetzen mit …</div>' +
+    '<label class="form-label">Woche</label>' +
+    '<select id="rp-week" class="form-input">' +
+      [1,2,3,4].map(function(w) {
+        return '<option value="'+w+'"'+(w===row._week?' selected':'')+'>Woche '+w+'</option>';
+      }).join('') +
+    '</select>' +
+    '<label class="form-label">Tag</label>' +
+    '<select id="rp-day" class="form-input">' +
+      DAYS_LONG.map(function(d) { return '<option value="'+d+'">'+d+'</option>'; }).join('') +
+    '</select>' +
+    '<div style="display:flex;gap:8px;margin-top:16px">' +
+      '<button class="btn-save" onclick="confirmReplace(' + bufIdx + ')">Tauschen</button>' +
+      '<button class="btn-cancel" onclick="closeModal()">Abbrechen</button>' +
+    '</div>';
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById('sheet').classList.add('show');
+}
+
+async function confirmReplace(bufIdx) {
+  var src     = rowBuffer[bufIdx];
+  var tgtWeek = parseInt(document.getElementById('rp-week').value);
+  var tgtDay  = document.getElementById('rp-day').value;
+
+  var res = await sb.from('essensplan')
+    .select('*')
+    .eq('gruppe_id', currentGroup.id)
+    .eq('wochen_nr', tgtWeek)
+    .eq('tag', tgtDay)
+    .single();
+  if (res.error || !res.data) { alert('Kein Eintrag für diesen Tag gefunden.'); return; }
+  var tgt = res.data;
+
+  var fields = [
+    ['gericht','Gericht'], ['beilage','Beilage'], ['gemuese','Gemüse'],
+    ['kcal','kcal'], ['protein','Protein'], ['fett','Fett'],
+    ['kohlenhydrate','Kohlenhydrate'], ['mengen','Mengenangaben (2 Personen)']
+  ];
+  var srcP = { geaendert: new Date().toISOString() };
+  var tgtP = { geaendert: new Date().toISOString() };
+  fields.forEach(function(pair) {
+    srcP[pair[0]] = tgt[pair[0]];
+    tgtP[pair[0]] = src[pair[1]] || '';
+  });
+
+  await Promise.all([
+    sb.from('essensplan').update(srcP).eq('id', src._id),
+    sb.from('essensplan').update(tgtP).eq('id', tgt.id)
+  ]);
+  closeModal();
+  await loadPlan();
+}
+
+// ── Automatische Zykluswoche ──────────────────────────────────────────────
+
+function getCurrentPlanIdx() {
+  var now = new Date();
+  var dow = now.getDay();
+  var thisMonday = new Date(now);
+  thisMonday.setDate(now.getDate() - (dow === 0 ? 6 : dow - 1));
+  thisMonday.setHours(0, 0, 0, 0);
+  var weeks = Math.round((thisMonday - REFERENCE_MONDAY) / 604800000);
+  return ((weeks % 4) + 4) % 4;
+}
+
+// ── Adapter: DB-Zeile → Anzeige-Objekt ───────────────────────────────────
+
+function dbToDisplay(r) {
+  return {
+    _id:   r.id,
+    _week: r.wochen_nr,
+    'Tag':           r.tag            || '',
+    'Gericht':       r.gericht        || '',
+    'Beilage':       r.beilage        || '',
+    'Gemüse':        r.gemuese        || '',
+    'kcal':          String(r.kcal    || ''),
+    'Protein':       r.protein        || '',
+    'Fett':          r.fett           || '',
+    'Kohlenhydrate': r.kohlenhydrate  || '',
+    'Mengenangaben (2 Personen)': r.mengen || ''
+  };
+}
+
+// ── Gruppen ───────────────────────────────────────────────────────────────
+
+async function loadGroups() {
+  var result = await sb.from('gruppen').select('*').order('id');
+
+  // Fallback falls gruppen-Tabelle noch nicht angelegt wurde
+  if (result.error) {
+    currentGroup = { id: 1, name: 'Standard' };
+    var sel = document.getElementById('group-select');
+    sel.innerHTML = '<option value="1">Standard</option>';
+    sel.disabled = true;
+    document.querySelector('.group-add-btn').disabled = true;
+    document.querySelector('.group-add-btn').title = 'gruppen-Tabelle fehlt – SQL ausführen';
+    return;
+  }
+
+  var groups = result.data || [];
+  if (!groups.length) {
+    var ins = await sb.from('gruppen').insert({ name: 'Standard' }).select().single();
+    if (ins.data) groups = [ins.data];
+  }
+  var sel = document.getElementById('group-select');
+  sel.innerHTML = groups.map(function(g) {
+    return '<option value="' + g.id + '">' + esc(g.name) + '</option>';
+  }).join('');
+  var saved = parseInt(localStorage.getItem(GROUP_KEY));
+  currentGroup = groups.find(function(g) { return g.id === saved; }) || groups[0];
+  if (currentGroup) sel.value = currentGroup.id;
+}
+
+async function onGroupChange(id) {
+  var result = await sb.from('gruppen').select('*').eq('id', parseInt(id)).single();
+  currentGroup = result.data;
+  localStorage.setItem(GROUP_KEY, id);
+  await loadPlan();
+}
+
+async function createGroup() {
+  var name = prompt('Name der neuen Gruppe:');
+  if (!name || !name.trim()) return;
+  var result = await sb.from('gruppen').insert({ name: name.trim() }).select().single();
+  if (result.error) { alert('Fehler: ' + result.error.message); return; }
+  var sel = document.getElementById('group-select');
+  sel.innerHTML += '<option value="' + result.data.id + '">' + esc(result.data.name) + '</option>';
+  sel.value = result.data.id;
+  await onGroupChange(result.data.id);
+}
+
+// ── Plan laden ────────────────────────────────────────────────────────────
+
+async function loadPlan() {
+  setStatus('load', 'Wird geladen …');
+  try {
+    var result = await sb
+      .from('essensplan')
+      .select('*')
+      .eq('gruppe_id', currentGroup.id)
+      .order('wochen_nr')
+      .order('id');
+    if (result.error) throw result.error;
+
+    var map = {};
+    (result.data || []).forEach(function(r) {
+      if (!map[r.wochen_nr]) map[r.wochen_nr] = [];
+      map[r.wochen_nr].push(dbToDisplay(r));
+    });
+    allWeeks = Object.keys(map).sort(function(a,b){ return a-b; }).map(function(k){ return map[k]; });
+    if (!allWeeks.length) allWeeks = [[]];
+
+    localStorage.setItem(CACHE_KEY, JSON.stringify(allWeeks));
+    localStorage.setItem(TS_KEY, new Date().toISOString());
+
+    render(allWeeks, planIdx);
+    setStatus('ok', 'Supabase · ' + fmtTs(localStorage.getItem(TS_KEY)));
+    document.getElementById('footer').textContent =
+      currentGroup.name + ' · ' + allWeeks.length + ' Wochen · ' + fmtTs(localStorage.getItem(TS_KEY));
+  } catch (err) {
+    var cached = localStorage.getItem(CACHE_KEY);
+    var ts     = localStorage.getItem(TS_KEY);
+    if (cached) {
+      try {
+        allWeeks = JSON.parse(cached);
+        render(allWeeks, planIdx);
+        setStatus('cache', 'Aus Cache · ' + fmtTs(ts));
+        document.getElementById('footer').textContent = 'Gespeicherter Plan · ' + fmtTs(ts);
+        return;
+      } catch(e) {}
+    }
+    setStatus('err', 'Fehler: ' + err.message);
+    document.getElementById('pills').style.display = 'none';
+    document.getElementById('footer').textContent = '';
+    document.getElementById('cards').innerHTML =
+      '<div class="empty"><div class="empty-icon">⚠️</div>' +
+      '<div class="empty-title">Verbindungsfehler</div>' +
+      '<div class="empty-sub">Supabase nicht erreichbar.<br>' + esc(err.message) + '</div></div>';
+  }
+}
+
+// ── Edit-Sheet ────────────────────────────────────────────────────────────
+
+function openEdit(row) {
+  editingRow = row;
+  var isNew = !row;
+  var r = row || {};
+  document.getElementById('sheet-inner').innerHTML =
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">' +
+      '<div style="font-family:\'Lora\',serif;font-size:18px">' + (isNew ? 'Neuer Eintrag' : 'Bearbeiten') + '</div>' +
+      (!isNew ? '<button class="btn-del" onclick="deleteEntry()">Löschen</button>' : '') +
+    '</div>' +
+    (isNew ?
+      '<label class="form-label">Woche</label>' +
+      '<select id="f-week" class="form-input">' +
+        [1,2,3,4].map(function(w){ return '<option value="'+w+'"'+(w===(planIdx+1)?' selected':'')+'>Woche '+w+'</option>'; }).join('') +
+      '</select>' +
+      '<label class="form-label">Tag</label>' +
+      '<select id="f-day" class="form-input">' +
+        DAYS_LONG.map(function(d){ return '<option value="'+d+'">'+d+'</option>'; }).join('') +
+      '</select>'
+    : '') +
+    '<label class="form-label">Gericht</label>' +
+    '<input id="f-gericht" class="form-input" value="' + esc(r['Gericht']||'') + '">' +
+    '<label class="form-label">Beilage</label>' +
+    '<input id="f-beilage" class="form-input" value="' + esc(r['Beilage']||'') + '">' +
+    '<label class="form-label">Gemüse</label>' +
+    '<input id="f-gemuese" class="form-input" value="' + esc(r['Gemüse']||'') + '">' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
+      '<div><label class="form-label">kcal</label><input id="f-kcal" class="form-input" type="number" value="' + (r['kcal']||'') + '"></div>' +
+      '<div><label class="form-label">Protein</label><input id="f-protein" class="form-input" value="' + esc(r['Protein']||'') + '"></div>' +
+      '<div><label class="form-label">Fett</label><input id="f-fett" class="form-input" value="' + esc(r['Fett']||'') + '"></div>' +
+      '<div><label class="form-label">Kohlenhydrate</label><input id="f-kh" class="form-input" value="' + esc(r['Kohlenhydrate']||'') + '"></div>' +
+    '</div>' +
+    '<label class="form-label">Mengenangaben (2 Personen)</label>' +
+    '<textarea id="f-mengen" class="form-input" rows="3">' + esc(r['Mengenangaben (2 Personen)']||'') + '</textarea>' +
+    '<div style="display:flex;gap:8px;margin-top:16px">' +
+      '<button class="btn-save" onclick="saveEntry()">Speichern</button>' +
+      '<button class="btn-cancel" onclick="closeModal()">Abbrechen</button>' +
+    '</div>';
+
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById('sheet').classList.add('show');
+}
+
+async function saveEntry() {
+  var payload = {
+    gruppe_id:     currentGroup.id,
+    gericht:       document.getElementById('f-gericht').value.trim(),
+    beilage:       document.getElementById('f-beilage').value.trim(),
+    gemuese:       document.getElementById('f-gemuese').value.trim(),
+    kcal:          parseInt(document.getElementById('f-kcal').value) || null,
+    protein:       document.getElementById('f-protein').value.trim(),
+    fett:          document.getElementById('f-fett').value.trim(),
+    kohlenhydrate: document.getElementById('f-kh').value.trim(),
+    mengen:        document.getElementById('f-mengen').value.trim(),
+    geaendert:     new Date().toISOString()
+  };
+
+  var result;
+  if (editingRow) {
+    result = await sb.from('essensplan').update(payload).eq('id', editingRow._id);
+  } else {
+    payload.wochen_nr = parseInt(document.getElementById('f-week').value);
+    payload.tag       = document.getElementById('f-day').value;
+    result = await sb.from('essensplan').insert(payload);
+  }
+
+  if (result.error) { alert('Fehler: ' + result.error.message); return; }
+  closeModal();
+  await loadPlan();
+}
+
+async function deleteEntry() {
+  if (!editingRow || !confirm('Eintrag löschen?')) return;
+  var result = await sb.from('essensplan').delete().eq('id', editingRow._id);
+  if (result.error) { alert('Fehler: ' + result.error.message); return; }
+  closeModal();
+  await loadPlan();
+}
+
+// ── Detail-Modal mit Edit-Button ──────────────────────────────────────────
+
+function openModal(idx) {
+  var row = rowBuffer[idx];
+  if (!row) return;
+  var type  = detectType(row['Gericht']);
+  var badge = type === 'fish' ? '<span class="badge badge-fish">Fisch</span>'
+            : type === 'meat' ? '<span class="badge badge-meat">Fleisch</span>'
+            : type === 'veg'  ? '<span class="badge badge-veg">Vegetarisch</span>'
+            : '';
+  var desc   = [row['Beilage'], row['Gemüse']].filter(Boolean).join(' · ');
+  var mengen = (row['Mengenangaben (2 Personen)'] || '').trim();
+  var mengenLines = mengen ? mengen.split(/,\s*/).map(esc).join('<br>') : '';
+
+  document.getElementById('sheet-inner').innerHTML =
+    '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">' +
+      '<div>' +
+        (badge ? '<div class="sheet-kicker">' + badge + '</div>' : '') +
+        '<div class="sheet-name">' + esc(row['Gericht'] || '–') + '</div>' +
+      '</div>' +
+      '<button onclick="openEdit(rowBuffer[' + idx + '])" ' +
+        'style="background:var(--surface2);border:none;border-radius:8px;padding:6px 12px;' +
+        'cursor:pointer;font-size:13px;flex-shrink:0;margin-left:12px;font-family:inherit">' +
+        '✏️ Edit' +
+      '</button>' +
+    '</div>' +
+    (desc ? '<div class="sheet-meta">' + esc(desc) + '</div>' : '') +
+    '<div class="nut-row">' +
+      nutBox(row['kcal'], 'kcal') +
+      nutBox(row['Protein'], 'Protein') +
+      nutBox(row['Fett'], 'Fett') +
+      nutBox(row['Kohlenhydrate'], 'KH') +
+    '</div>' +
+    (mengenLines ?
+      '<div class="mengen-card">' +
+        '<div class="mengen-head">Mengenangaben · 2 Personen</div>' +
+        '<div class="mengen-body">' + mengenLines + '</div>' +
+      '</div>'
+    : '');
+
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById('sheet').classList.add('show');
+}
+
+function nutBox(val, lbl) {
+  return '<div class="nut-box"><div class="nut-v">' + esc(val || '–') + '</div><div class="nut-l">' + esc(lbl) + '</div></div>';
+}
+
+function closeModal() {
+  document.getElementById('overlay').classList.remove('show');
+  document.getElementById('sheet').classList.remove('show');
+}
+
+// ── Render ────────────────────────────────────────────────────────────────
+
+function render(weeks, idx) {
+  if (!weeks || weeks.length === 0) return;
+  var rows = weeks[idx] || [];
+
+  var curIdx  = getCurrentPlanIdx();
+  var relWeek = ((idx - curIdx) % 4 + 4) % 4;
+  var mon = getMondayOffset(relWeek);
+  var kw  = getISOWeek(mon);
+  var sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+
+  document.getElementById('week-dates').textContent =
+    'KW ' + kw + ' · ' + fmtD(mon) + ' – ' + fmtD(sun) + ' ' + sun.getFullYear();
+
+  var pipsHtml = '';
+  for (var p = 0; p < weeks.length; p++) {
+    pipsHtml += '<div class="pip' + (p === idx ? ' on' : '') + '"></div>';
+  }
+  document.getElementById('week-pips').innerHTML = pipsHtml;
+  updateNavButtons();
+
+  var byDay = {};
+  rows.forEach(function(r) {
+    byDay[(r['Tag'] || '').trim().toLowerCase()] = r;
+  });
+
+  rowBuffer = [];
+  var fish = 0, meat = 0, total = 0, html = '';
+  var isCard = viewMode === 'card';
+
+  DAYS_LONG.forEach(function(day, i) {
+    var date  = new Date(mon); date.setDate(mon.getDate() + i);
+    var today = isToday(date);
+    var row   = byDay[day.toLowerCase()];
+    if (!row) return;
+
+    var bufIdx = rowBuffer.length;
+    rowBuffer.push(row);
+    total++;
+
+    var type  = detectType(row['Gericht']);
+    if (type === 'fish') fish++;
+    if (type === 'meat') meat++;
+
+    var desc  = [row['Beilage'], row['Gemüse']].filter(Boolean).join(' · ');
+    var badge = type === 'fish' ? '<span class="badge badge-fish">Fisch</span>'
+              : type === 'meat' ? '<span class="badge badge-meat">Fleisch</span>'
+              : type === 'veg'  ? '<span class="badge badge-veg">Vegetarisch</span>'
+              : '';
+
+    var mengen = (row['Mengenangaben (2 Personen)'] || '').trim();
+    var mengenLines = mengen ? mengen.split(/,\s*/).map(esc).join('<br>') : '';
+
+    html +=
+      '<div class="card' + (today ? ' today' : '') + '"' +
+      ' draggable="true"' +
+      ' ondragstart="onDragStart(event,' + bufIdx + ')"' +
+      ' ondragover="onDragOver(event)"' +
+      ' ondragleave="onDragLeave(event)"' +
+      ' ondrop="onDrop(event,' + bufIdx + ')"' +
+      ' ondragend="onDragEnd()"' +
+      ' ontouchstart="onLpStart(event,' + bufIdx + ')"' +
+      ' ontouchend="onLpEnd()"' +
+      ' ontouchmove="onLpMove()"' +
+      ' onmousedown="onLpStart(event,' + bufIdx + ')"' +
+      ' onmouseup="onLpEnd()"' +
+      ' onmouseleave="onLpEnd()"' +
+      ' oncontextmenu="event.preventDefault();openCardActions(' + bufIdx + ')"' +
+      (!isCard ? ' onclick="if(!lpFired)openModal(' + bufIdx + ')"' : '') + '>' +
+        '<div class="day-col">' +
+          '<div class="day-short">' + DAYS_SHORT[i] + '</div>' +
+          '<div class="day-num">' + date.getDate() + '.</div>' +
+          (today ? '<div class="today-dot"></div>' : '') +
+        '</div>' +
+        '<div class="meal-col">' +
+          '<div class="meal-name">' + esc(row['Gericht'] || '–') + '</div>' +
+          (desc ? '<div class="meal-desc">' + esc(desc) + '</div>' : '') +
+          badge +
+          '<div class="card-extra">' +
+            '<div class="nut-row">' +
+              nutBox(row['kcal'], 'kcal') +
+              nutBox(row['Protein'], 'Protein') +
+              nutBox(row['Fett'], 'Fett') +
+              nutBox(row['Kohlenhydrate'], 'KH') +
+            '</div>' +
+            (mengenLines ?
+              '<div class="mengen-card" style="margin-top:12px">' +
+                '<div class="mengen-head">Mengenangaben · 2 Personen</div>' +
+                '<div class="mengen-body">' + mengenLines + '</div>' +
+              '</div>'
+            : '') +
+            '<button class="card-edit-btn" onclick="event.stopPropagation();openEdit(rowBuffer[' + bufIdx + '])">✏️ Bearbeiten</button>' +
+          '</div>' +
+        '</div>' +
+        (!isCard ? '<div class="card-chevron">›</div>' : '') +
+      '</div>';
+  });
+
+  document.getElementById('cards').innerHTML = html ||
+    '<div class="empty"><div class="empty-icon">📋</div>' +
+    '<div class="empty-title">Keine Einträge</div>' +
+    '<div class="empty-sub">Für diese Gruppe noch kein Plan angelegt.<br>Tippe auf + um Einträge hinzuzufügen.</div></div>';
+
+  document.getElementById('p-fish').textContent  = fish + '×';
+  document.getElementById('p-meat').textContent  = meat + '×';
+  document.getElementById('p-total').textContent = total;
+  document.getElementById('pills').style.display = 'flex';
+}
+
+// ── Drag & Drop ───────────────────────────────────────────────────────────
+
+function onDragStart(e, idx) {
+  dragSrcIdx = idx;
+  e.dataTransfer.effectAllowed = 'move';
+}
+
+function onDragOver(e) {
+  e.preventDefault();
+  e.currentTarget.classList.add('drag-over');
+}
+
+function onDragLeave(e) {
+  e.currentTarget.classList.remove('drag-over');
+}
+
+function onDragEnd() {
+  document.querySelectorAll('.card').forEach(function(c) { c.classList.remove('drag-over'); });
+}
+
+async function onDrop(e, targetIdx) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  if (dragSrcIdx === null || dragSrcIdx === targetIdx) return;
+
+  var src = rowBuffer[dragSrcIdx];
+  var tgt = rowBuffer[targetIdx];
+  var fields = [
+    ['gericht','Gericht'], ['beilage','Beilage'], ['gemuese','Gemüse'],
+    ['kcal','kcal'], ['protein','Protein'], ['fett','Fett'],
+    ['kohlenhydrate','Kohlenhydrate'], ['mengen','Mengenangaben (2 Personen)']
+  ];
+  var srcPayload = { geaendert: new Date().toISOString() };
+  var tgtPayload = { geaendert: new Date().toISOString() };
+  fields.forEach(function(pair) {
+    srcPayload[pair[0]] = tgt[pair[1]];
+    tgtPayload[pair[0]] = src[pair[1]];
+  });
+
+  await Promise.all([
+    sb.from('essensplan').update(srcPayload).eq('id', src._id),
+    sb.from('essensplan').update(tgtPayload).eq('id', tgt._id)
+  ]);
+  dragSrcIdx = null;
+  await loadPlan();
+}
+
+// ── Wochennavigation ──────────────────────────────────────────────────────
+
+function changeWeek(delta) {
+  if (allWeeks.length === 0) return;
+  var next = planIdx + delta;
+  if (next < 0 || next >= allWeeks.length) return;
+  planIdx = next;
+  render(allWeeks, planIdx);
+}
+
+function updateNavButtons() {
+  document.getElementById('prev-btn').disabled = planIdx === 0;
+  document.getElementById('next-btn').disabled = planIdx >= allWeeks.length - 1;
+}
+
+// ── Tastatur ──────────────────────────────────────────────────────────────
+
+document.addEventListener('keydown', function(e) {
+  if (document.getElementById('sheet').classList.contains('show')) {
+    if (e.key === 'Escape') { closeModal(); }
+    return;
+  }
+  if (e.key === 'ArrowLeft')  { e.preventDefault(); changeWeek(-1); }
+  if (e.key === 'ArrowRight') { e.preventDefault(); changeWeek(1); }
+});
+
+// ── Status-UI ─────────────────────────────────────────────────────────────
+
+function setStatus(type, msg) {
+  document.getElementById('dot').className          = 'dot ' + type;
+  document.getElementById('status-text').textContent = msg;
+  var icon = document.getElementById('refresh-icon');
+  icon.className   = type === 'load' ? 'spinning' : '';
+  icon.textContent = '↻';
+  document.getElementById('refresh-btn').disabled = type === 'load';
+}
+
+// ── Datum-Hilfsfunktionen ─────────────────────────────────────────────────
+
+function getMondayOffset(weekOffset) {
+  var now = new Date();
+  var dow = now.getDay();
+  var mon = new Date(now);
+  mon.setDate(now.getDate() - (dow === 0 ? 6 : dow - 1) + weekOffset * 7);
+  mon.setHours(0, 0, 0, 0);
+  return mon;
+}
+
+function getISOWeek(d) {
+  var dt = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  dt.setUTCDate(dt.getUTCDate() + 4 - (dt.getUTCDay() || 7));
+  var y = new Date(Date.UTC(dt.getUTCFullYear(), 0, 1));
+  return Math.ceil(((dt - y) / 86400000 + 1) / 7);
+}
+
+function isToday(d) {
+  var t = new Date();
+  return d.getDate() === t.getDate()
+      && d.getMonth() === t.getMonth()
+      && d.getFullYear() === t.getFullYear();
+}
+
+function fmtD(d) { return d.getDate() + '.' + (d.getMonth() + 1) + '.'; }
+
+function fmtTs(iso) {
+  if (!iso) return '–';
+  var d = new Date(iso), t = new Date();
+  var time = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+  return d.toDateString() === t.toDateString()
+    ? 'Heute ' + time + ' Uhr'
+    : d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }) + ' · ' + time + ' Uhr';
+}
+
+function detectType(name) {
+  var n = (name || '').toLowerCase();
+  if (/kabeljau|fischfilet|lachs|forelle|thunfisch|seelachs|garnelen|krabben|fisch/.test(n)) return 'fish';
+  if (/hackfleisch|puten|hühnchen|huhn|schwein|rind|cordon|schnitzel|lamm|gulasch/.test(n)) return 'meat';
+  if (/tofu|linsen|kichererbsen|veggie|buddha|ratatouille|shakshuka/.test(n)) return 'veg';
+  return '';
+}
+
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Start ─────────────────────────────────────────────────────────────────
+
+(async function init() {
+  planIdx = getCurrentPlanIdx();
+  await loadGroups();
+  await loadPlan();
+  // Karten-Modus nach erstem Layout aktivieren
+  requestAnimationFrame(function() {
+    document.getElementById('cards').classList.add('view-card');
+    setSnapHeight();
+  });
+})();
+</script>
+</body>
+</html>
