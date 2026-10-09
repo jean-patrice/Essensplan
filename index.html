@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#2D5016">
+  <meta name="theme-color" content="#40534D">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Wochenplan">
@@ -11,756 +11,265 @@
   <link rel="icon" type="image/svg+xml" href="./icon.svg">
   <link rel="apple-touch-icon" href="./apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
-      --green:       #2D5016;
-      --green-mid:   #5A8A2E;
-      --green-light: #EBF0E3;
-      --coral:       #C45231;
-      --coral-light: #FAEDE8;
-      --blue:        #2A5580;
-      --blue-light:  #E5EFF7;
-      --amber:       #C17B2A;
-      --amber-light: #FBF0E0;
-      --bg:          #F5F2ED;
-      --surface:     #FDFBF8;
-      --surface2:    #EDE9E2;
-      --text:        #1A1A18;
-      --text2:       #5A5850;
-      --text3:       #9A9788;
-      --border:      rgba(0,0,0,0.09);
-      --radius:      22px;
+      --amber:#D98A3D; --danger:#A8452F;
+      --page:#FFF9E2; --ink:#1A3637; --ink2:#40534D; --ink3:#5B6F5E;
+      --card:#FFFDF2; --border:rgba(64,83,77,.16); --border2:rgba(64,83,77,.4);
+      --today:#EBECCC; --sheet:#FFFDF2; --input:#FFF9E2; --nut-s:#EBECCC;
+      --accent-ink:#7A4A32; --btn:#40534D; --btn-ink:#FFF9E2; --veil:rgba(26,54,55,.6);
+      --danger-t:#A8452F; --scrim:rgba(26,54,55,.55);
+      --fish-bg:#CDD4B1; --fish-ink:#1A3637; --meat-bg:#FEECD0; --meat-ink:#7A4A32; --veg-bg:#CDD4B1; --veg-ink:#1A3637;
     }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-
-    html, body {
-      height: 100%;
-      font-family: 'DM Sans', sans-serif;
-      color: var(--text);
-      overscroll-behavior: none;
-    }
-
-    body {
-      background-image: url('./YogaBackground.jpg');
-      background-size: cover;
-      background-position: center top;
-      background-attachment: scroll;
-      background-color: var(--bg);
-    }
-
-    .app {
-      max-width: 480px;
-      margin: 0 auto;
-      height: 100dvh;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* ── Header ─────────────────────────────────────── */
-    .header {
-      background: var(--green);
-      color: white;
-      padding: env(safe-area-inset-top, 0) 20px 0;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-
-    .header-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 16px 0 12px;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .brand-icon {
-      width: 34px; height: 34px;
-      background: rgba(255,255,255,0.15);
-      border-radius: 8px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 18px;
-    }
-
-    .brand-text .title {
-      font-family: 'Lora', serif;
-      font-size: 20px;
-      font-weight: 500;
-    }
-
-    .brand-text .subtitle {
-      font-size: 11px;
-      color: rgba(255,255,255,0.5);
-      margin-top: 1px;
-    }
-
-    .refresh-btn {
-      width: 36px; height: 36px;
-      border-radius: 8px; border: none;
-      background: rgba(255,255,255,0.15);
-      color: white; font-size: 18px;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .refresh-btn:active { background: rgba(255,255,255,0.28); }
-    .refresh-btn:disabled { opacity: 0.4; }
-
-    .btn-wrap { position: relative; }
-    .icon-badge {
-      position: absolute;
-      top: -4px; right: -4px;
-      min-width: 16px; height: 16px;
-      padding: 0 3px;
-      border-radius: 8px;
-      background: var(--coral);
-      color: white;
-      font-size: 10px; font-weight: 500;
-      line-height: 16px;
-      text-align: center;
-      pointer-events: none;
-    }
-
-    /* ── Week navigation ────────────────────────────── */
-    .week-nav {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 0 0 10px;
-    }
-
-    .nav-btn {
-      flex-shrink: 0;
-      width: 34px; height: 34px;
-      border: none;
-      background: rgba(255,255,255,0.12);
-      color: white;
-      border-radius: 8px;
-      font-size: 20px;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: background 0.15s;
-    }
-    .nav-btn:active { background: rgba(255,255,255,0.28); }
-    .nav-btn:disabled { opacity: 0.25; pointer-events: none; }
-
-    .week-center {
-      flex: 1;
-      text-align: center;
-    }
-
-    .week-dates {
-      font-size: 13px;
-      color: rgba(255,255,255,0.9);
-      font-weight: 400;
-    }
-
-    .week-pips {
-      display: flex;
-      gap: 5px;
-      justify-content: center;
-      margin-top: 5px;
-    }
-
-    .pip {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.22);
-      transition: background 0.2s, transform 0.15s;
-    }
-    .pip.on {
-      background: rgba(255,255,255,0.9);
-      transform: scale(1.2);
-    }
-
-    /* ── Gruppen-Leiste ─────────────────────────────── */
-    .group-bar {
-      display: flex;
-      gap: 8px;
-      padding: 0 0 10px;
-      align-items: center;
-    }
-
-    .group-select {
-      flex: 1;
-      background: rgba(255,255,255,0.15);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      padding: 6px 10px;
-      font-size: 13px;
-      cursor: pointer;
-      font-family: inherit;
-    }
-    .group-select option { color: var(--text); background: var(--surface); }
-
-    .group-add-btn {
-      width: 30px; height: 30px;
-      border: none;
-      background: rgba(255,255,255,0.15);
-      color: white;
-      border-radius: 8px;
-      font-size: 18px;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .group-add-btn:active { background: rgba(255,255,255,0.28); }
-
-    /* ── Status row ─────────────────────────────────── */
-    .status-row {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      padding: 8px 0 12px;
-      border-top: 1px solid rgba(255,255,255,0.1);
-    }
-
-    .dot {
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      flex-shrink: 0;
-      background: rgba(255,255,255,0.3);
-    }
-    .dot.ok    { background: #8BC34A; }
-    .dot.cache { background: var(--amber); }
-    .dot.err   { background: var(--coral); }
-    .dot.load  { animation: blink 1s ease-in-out infinite; background: rgba(255,255,255,0.6); }
-
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
-    @keyframes spin  { to{transform:rotate(360deg)} }
-    .spinning { animation: spin .7s linear infinite; display: inline-block; }
-
-    .status-text { font-size: 12px; color: rgba(255,255,255,0.65); }
-
-    /* ── Summary pills ──────────────────────────────── */
-    .pills {
-      display: flex;
-      gap: 8px;
-      padding: 14px 16px 8px;
-    }
-
-    .pill {
-      flex: 1;
-      background: rgba(255, 255, 255, 0.22);
-      backdrop-filter: blur(20px) saturate(160%);
-      -webkit-backdrop-filter: blur(20px) saturate(160%);
-      border: 1px solid rgba(255, 255, 255, 0.48);
-      border-radius: 16px;
-      padding: 8px 6px;
-      text-align: center;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.55);
-    }
-
-    .pill-val { font-size: 16px; font-weight: 500; }
-    .pill-lbl { font-size: 10px; color: var(--text3); margin-top: 2px; }
-
-    /* ── Cards ──────────────────────────────────────── */
-    .cards {
-      flex: 1;
-      overflow-y: scroll;
-      -webkit-overflow-scrolling: touch;
-      scroll-behavior: smooth;
-      padding: 4px 16px 28px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    /* ── Snap-Karten-Modus ──────────────────────────── */
-    .cards.view-card {
-      scroll-snap-type: y mandatory;
-      gap: 0;
-      padding: 0;
-    }
-
-    .cards.view-card .card {
-      min-height: var(--snap-h, 70vh);
-      scroll-snap-align: start;
-      scroll-snap-stop: always;
-      flex-direction: column;
-      justify-content: center;
-      align-items: flex-start;
-      gap: 14px;
-      border-radius: 0;
-      border-left: none;
-      border-right: none;
-      padding: 36px 28px;
-      cursor: default;
-    }
-
-    .cards.view-card .card.today {
-      border-left: none;
-      padding-left: 28px;
-    }
-
-    .cards.view-card .day-col {
-      display: flex;
-      flex-direction: row;
-      gap: 10px;
-      align-items: baseline;
-      min-width: unset;
-      padding-top: 0;
-    }
-    .cards.view-card .day-short { font-size: 13px; letter-spacing: .1em; }
-    .cards.view-card .day-num   { font-size: 20px; font-weight: 500; margin-top: 0; }
-    .cards.view-card .today-dot { margin-top: 0; align-self: center; }
-    .cards.view-card .meal-name { font-size: 30px; line-height: 1.2; }
-    .cards.view-card .meal-desc { font-size: 15px; margin-top: 6px; }
-    .cards.view-card .badge     { font-size: 13px; padding: 4px 14px; margin-top: 10px; }
-    .cards.view-card .card-chevron { display: none; }
-    .cards.view-card .meal-col  { width: 100%; }
-
-    /* ── Karten-Details (Nährwerte + Mengen + Edit) ─── */
-    .card-extra { display: none; }
-
-    .cards.view-card .card-extra {
-      display: block;
-      width: 100%;
-      margin-top: 4px;
-    }
-
-    .cards.view-card .nut-box {
-      background: rgba(255,255,255,0.18);
-    }
-
-    .card-edit-btn {
-      display: inline-block;
-      margin-top: 20px;
-      background: rgba(255,255,255,0.22);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border: 1px solid rgba(255,255,255,0.4);
-      border-radius: 14px;
-      padding: 10px 22px;
-      font-size: 14px;
-      font-family: inherit;
-      cursor: pointer;
-      color: var(--text);
-    }
-    .card-edit-btn:active { background: rgba(255,255,255,0.38); }
-
-    /* ── View-Toggle-Button ─────────────────────────── */
-    .view-toggle-btn {
-      height: 36px;
-      padding: 0 14px;
-      border-radius: 8px;
-      border: none;
-      background: rgba(255,255,255,0.15);
-      color: white;
-      font-size: 13px;
-      font-family: inherit;
-      cursor: pointer;
-      white-space: nowrap;
-    }
-    .view-toggle-btn:active { background: rgba(255,255,255,0.28); }
-
-    .card {
-      background: rgba(255, 255, 255, 0.22);
-      backdrop-filter: blur(20px) saturate(160%);
-      -webkit-backdrop-filter: blur(20px) saturate(160%);
-      border: 1px solid rgba(255, 255, 255, 0.48);
-      border-radius: var(--radius);
-      padding: 14px 16px;
-      display: flex;
-      align-items: flex-start;
-      gap: 14px;
-      cursor: pointer;
-      transition: background 0.15s, box-shadow 0.15s;
-      user-select: none;
-      box-shadow:
-        0 4px 24px rgba(0, 0, 0, 0.08),
-        inset 0 1px 0 rgba(255, 255, 255, 0.55);
-    }
-    .card:active {
-      background: rgba(255, 255, 255, 0.38);
-      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.55);
-    }
-
-    .card.today {
-      border-left: 3px solid var(--green-mid);
-      padding-left: 14px;
-      background: rgba(90, 138, 46, 0.18);
-      border-color: rgba(139, 195, 74, 0.5);
-    }
-
-    .card.drag-over {
-      border: 2px dashed var(--green-mid) !important;
-      opacity: 0.7;
-    }
-
-    .day-col { min-width: 40px; flex-shrink: 0; padding-top: 2px; }
-
-    .day-short {
-      font-size: 11px; font-weight: 500;
-      letter-spacing: .06em;
-      text-transform: uppercase;
-      color: var(--text3);
-    }
-
-    .day-num { font-size: 15px; font-weight: 500; margin-top: 2px; }
-
-    .today-dot {
-      width: 6px; height: 6px;
-      background: var(--green-mid);
-      border-radius: 50%;
-      margin-top: 5px;
-    }
-
-    .meal-col { flex: 1; min-width: 0; }
-
-    .meal-name {
-      font-family: 'Lora', serif;
-      font-size: 16px;
-      font-weight: 400;
-      line-height: 1.35;
-    }
-
-    .meal-desc {
-      font-size: 12px;
-      color: var(--text2);
-      margin-top: 4px;
-      line-height: 1.4;
-    }
-
-    .badge {
-      display: inline-block;
-      font-size: 11px; font-weight: 500;
-      padding: 2px 8px;
-      border-radius: 20px;
-      margin-top: 8px;
-    }
-    .badge-fish { background: var(--blue-light);  color: var(--blue); }
-    .badge-meat { background: var(--coral-light); color: var(--coral); }
-    .badge-veg  { background: var(--green-light); color: var(--green); }
-
-    .card-chevron {
-      flex-shrink: 0;
-      font-size: 14px;
-      color: var(--text3);
-      align-self: center;
-      margin-left: 4px;
-    }
-
-    /* ── FAB ────────────────────────────────────────── */
-    .fab {
-      position: fixed;
-      bottom: calc(24px + env(safe-area-inset-bottom, 0));
-      right: max(calc(50% - 240px + 16px), 16px);
-      width: 52px; height: 52px;
-      border-radius: 50%; border: none;
-      background: var(--green);
-      color: white;
-      font-size: 28px;
-      cursor: pointer;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.25);
-      z-index: 9;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .fab:active { opacity: 0.85; }
-
-    /* ── Empty / Error ──────────────────────────────── */
-    .empty {
-      flex: 1;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      text-align: center;
-      padding: 48px 24px;
-      gap: 10px;
-    }
-    .empty-icon  { font-size: 40px; }
-    .empty-title { font-size: 16px; font-weight: 500; color: var(--text2); }
-    .empty-sub   { font-size: 13px; color: var(--text3); line-height: 1.7; }
-    .empty-sub code {
-      background: var(--surface2);
-      border-radius: 4px;
-      padding: 1px 5px;
-      font-size: 12px;
-      color: var(--text2);
-    }
-
-    /* ── Footer ─────────────────────────────────────── */
-    .footer { display: none; }
-
-    /* ── Modal overlay ──────────────────────────────── */
-    .overlay {
-      position: fixed; inset: 0; z-index: 50;
-      background: rgba(0,0,0,0);
-      pointer-events: none;
-      transition: background 0.25s;
-    }
-    .overlay.show {
-      background: rgba(0,0,0,0.45);
-      pointer-events: auto;
-    }
-
-    /* ── Bottom sheet ───────────────────────────────── */
-    .sheet {
-      position: fixed; bottom: 0; left: 50%;
-      transform: translateX(-50%) translateY(105%);
-      width: 100%; max-width: 480px;
-      background: var(--surface);
-      border-radius: 20px 20px 0 0;
-      z-index: 51;
-      padding-bottom: max(env(safe-area-inset-bottom, 0px), 16px);
-      box-shadow: 0 -8px 48px rgba(0,0,0,0.18);
-      transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
-      max-height: 90dvh;
-      overflow-y: auto;
-    }
-    .sheet.show {
-      transform: translateX(-50%) translateY(0);
-    }
-
-    .sheet-grip {
-      width: 40px; height: 4px;
-      background: var(--border);
-      border-radius: 2px;
-      margin: 10px auto 0;
-    }
-
-    .sheet-inner { padding: 14px 20px 24px; }
-
-    .sheet-kicker { margin-bottom: 6px; }
-
-    .sheet-name {
-      font-family: 'Lora', serif;
-      font-size: 22px; font-weight: 400;
-      line-height: 1.3;
-      color: var(--text);
-    }
-
-    .sheet-meta {
-      font-size: 13px;
-      color: var(--text2);
-      margin-top: 5px;
-      line-height: 1.4;
-    }
-
-    .nut-row {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-      margin-top: 16px;
-    }
-
-    .nut-box {
-      background: var(--surface2);
-      border-radius: 10px;
-      padding: 10px 5px;
-      text-align: center;
-    }
-    .nut-v {
-      font-size: 14px; font-weight: 500;
-      color: var(--text);
-      white-space: nowrap;
-    }
-    .nut-l {
-      font-size: 10px;
-      color: var(--text3);
-      margin-top: 3px;
-    }
-
-    .mengen-card {
-      margin-top: 14px;
-      border-radius: 10px;
-      padding: 12px 14px;
-      background: var(--green-light);
-    }
-    .mengen-head {
-      font-size: 10px; font-weight: 500;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--green-mid);
-      margin-bottom: 6px;
-    }
-    .mengen-body {
-      font-size: 13px;
-      color: var(--text);
-      line-height: 1.7;
-    }
-
-    /* ── Edit-Formular ──────────────────────────────── */
-    .form-label {
-      display: block;
-      font-size: 11px; font-weight: 500;
-      color: var(--text3);
-      margin: 10px 0 4px;
-      text-transform: uppercase;
-      letter-spacing: .06em;
-    }
-    .form-input {
-      width: 100%;
-      border: 1px solid var(--border);
-      background: var(--surface2);
-      color: var(--text);
-      border-radius: 8px;
-      padding: 8px 10px;
-      font-size: 16px;
-      font-family: inherit;
-    }
-    .form-input:focus { outline: none; border-color: var(--green-mid); }
-    textarea.form-input { resize: vertical; }
-    .btn-save {
-      flex: 1; background: var(--green); color: white;
-      border: none; border-radius: 10px; padding: 12px;
-      font-size: 15px; cursor: pointer; font-family: inherit;
-    }
-    .btn-save:active { opacity: 0.85; }
-    .btn-cancel {
-      flex: 1; background: var(--surface2); color: var(--text2);
-      border: none; border-radius: 10px; padding: 12px;
-      font-size: 15px; cursor: pointer; font-family: inherit;
-    }
-    .btn-del {
-      background: var(--coral-light); color: var(--coral);
-      border: none; border-radius: 8px; padding: 6px 12px;
-      cursor: pointer; font-size: 13px; font-family: inherit;
-    }
-
-    /* ── Header Collapse ────────────────────────────── */
-    .week-nav,
-    .group-bar,
-    .status-row {
-      overflow: hidden;
-      max-height: 120px;
-      transition: max-height 0.28s ease, opacity 0.2s ease, padding 0.25s ease;
-    }
-    .header.collapsed .week-nav,
-    .header.collapsed .group-bar,
-    .header.collapsed .status-row {
-      max-height: 0;
-      opacity: 0;
-      padding-top: 0;
-      padding-bottom: 0;
-    }
-
-    /* ── Aktions-Sheet Buttons ──────────────────────── */
-    .action-btn {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      width: 100%;
-      padding: 16px 4px;
-      background: none;
-      border: none;
-      border-bottom: 0.5px solid var(--border);
-      font-size: 16px;
-      font-family: inherit;
-      color: var(--text);
-      cursor: pointer;
-      text-align: left;
-    }
-    .action-btn:last-child { border-bottom: none; }
-    .action-btn:active { background: var(--surface2); border-radius: 10px; }
-    .action-icon { font-size: 22px; width: 32px; text-align: center; flex-shrink: 0; }
-
-    /* ── Dark mode ──────────────────────────────────── */
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg:          #1A1C17;
-        --surface:     #23261E;
-        --surface2:    #2C2F26;
-        --green-light: #1E2A14;
-        --coral-light: #2A1810;
-        --blue-light:  #0E1E2E;
-        --amber-light: #2A2010;
-        --text:        #F0EDE5;
-        --text2:       #A8A598;
-        --text3:       #686660;
-        --border:      rgba(255,255,255,0.08);
+        --page:#1A3637; --ink:#FFF9E2; --ink2:#EBECCC; --ink3:#C2A884;
+        --card:#40534D; --border:rgba(235,236,204,.2); --border2:rgba(235,236,204,.4);
+        --today:#4F6B3F; --sheet:#1A3637; --input:#40534D; --nut-s:#40534D;
+        --accent-ink:#D98A3D; --btn:#FFF9E2; --btn-ink:#1A3637; --veil:rgba(26,54,55,.72);
+        --danger-t:#E8A18F;
+        --fish-bg:#1A3637; --fish-ink:#CDD4B1; --meat-bg:#7A4A32; --meat-ink:#FEECD0; --veg-bg:#4F6B3F; --veg-ink:#FFF9E2;
       }
-      .card {
-        background: rgba(28, 32, 22, 0.42);
-        border-color: rgba(255, 255, 255, 0.12);
-        box-shadow: 0 4px 24px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.08);
-      }
-      .card:active {
-        background: rgba(28, 32, 22, 0.58);
-      }
-      .card.today {
-        background: rgba(45, 80, 22, 0.38);
-        border-color: rgba(139, 195, 74, 0.3);
-      }
-      .pill {
-        background: rgba(28, 32, 22, 0.42);
-        border-color: rgba(255, 255, 255, 0.12);
-        box-shadow: 0 2px 12px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.06);
-      }
-      .mengen-card { background: var(--surface2); }
-      .mengen-head { color: #8BC34A; }
     }
-  </style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; font-family: 'DM Sans', sans-serif; color: var(--ink); background: var(--page); overscroll-behavior: none; }
+    svg { fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+    button { font-family: inherit; }
+    .app { max-width: 480px; margin: 0 auto; height: 100dvh; overflow: hidden; display: flex; flex-direction: column; }
+
+    /* Header */
+    .header {
+      position: relative; flex: none; z-index: 10; color: #FFF9E2;
+      padding: calc(env(safe-area-inset-top, 0px) + 14px) 20px 20px;
+      border-radius: 0 0 28px 28px;
+      background-image: linear-gradient(var(--veil), var(--veil)), url('./ref-leaves.jpg');
+      background-size: cover; background-position: center top;
+      transition: padding .25s ease;
+    }
+    .header.collapsed { padding-bottom: 14px; }
+    .header-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .brand-text .title { font-family: 'Newsreader', Georgia, serif; font-size: 28px; font-weight: 400; line-height: 1.1; }
+    .subtitle { display: flex; align-items: center; gap: 8px; margin-top: 3px; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; opacity: .9; }
+    .group-select {
+      appearance: none; -webkit-appearance: none; background: transparent; border: none; color: inherit;
+      font: inherit; letter-spacing: inherit; text-transform: inherit; cursor: pointer; padding-right: 14px; max-width: 150px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23FFF9E2' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right center;
+    }
+    .group-select option { color: #1A3637; background: #FFF9E2; text-transform: none; letter-spacing: 0; }
+    .group-add-btn { width: 22px; height: 22px; border-radius: 50%; border: 1px solid rgba(255,249,226,.35); background: transparent; color: inherit; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .group-add-btn:disabled { opacity: .4; }
+    .header-actions { display: flex; gap: 8px; }
+    .hbtn { position: relative; width: 38px; height: 38px; border-radius: 50%; border: 1px solid rgba(255,249,226,.35); background: transparent; color: inherit; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background .18s ease; }
+    .hbtn:active { background: rgba(255,249,226,.18); }
+    .hbtn:disabled { opacity: .5; }
+    .btn-wrap { position: relative; }
+    .icon-badge { position: absolute; top: -4px; right: -4px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: var(--amber); color: #2B1A0C; font-size: 10px; font-weight: 700; line-height: 16px; text-align: center; pointer-events: none; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; flex: none; background: rgba(255,249,226,.4); }
+    .dot.ok { background: #CDD4B1; } .dot.cache { background: #DCA278; } .dot.err { background: #E8A18F; }
+    .dot.load { animation: blink 1s ease-in-out infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+    @keyframes spin { to{transform:rotate(360deg)} }
+    .spinning { animation: spin .7s linear infinite; display: inline-flex; }
+
+    .week-block { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; margin-top: 20px; overflow: hidden; max-height: 120px; transition: max-height .28s ease, opacity .2s ease, margin .25s ease; }
+    .header.collapsed .week-block { max-height: 0; opacity: 0; margin-top: 0; }
+    .week-count { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; opacity: .85; }
+    .week-kw { font-family: 'Newsreader', Georgia, serif; font-size: 40px; line-height: 1.05; margin-top: 2px; }
+    .week-dates { font-size: 13px; opacity: .9; margin-top: 2px; }
+    .week-arrows { display: flex; gap: 8px; }
+    .nav-btn { width: 34px; height: 34px; border-radius: 50%; border: 1px solid rgba(255,249,226,.35); background: transparent; color: inherit; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .nav-btn:active { background: rgba(255,249,226,.18); }
+    .nav-btn:disabled { opacity: .3; pointer-events: none; }
+
+    /* Tagesleiste (Karten-Modus) */
+    .daystrip { display: none; flex: none; grid-template-columns: repeat(7, 1fr); gap: 6px; padding: 20px 16px 0; }
+    .app.mode-card .daystrip { display: grid; }
+    .chip { height: 62px; border-radius: 18px; background: var(--card); color: var(--ink); border: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: pointer; transition: background .18s ease; }
+    .chip span { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; }
+    .chip b { font-size: 16px; font-weight: 500; }
+    .chip.on { background: var(--btn); color: var(--btn-ink); border-color: var(--btn); }
+
+    /* Karten */
+    .cards { position: relative; flex: 1; overflow-y: scroll; -webkit-overflow-scrolling: touch; scroll-behavior: smooth; padding: 12px 16px 110px; display: flex; flex-direction: column; gap: 8px; }
+    .card { flex: none; background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 12px 14px; display: flex; align-items: center; gap: 14px; cursor: pointer; user-select: none; transition: opacity .18s ease; }
+    .card:active { opacity: .85; }
+    .card.today { background: var(--today); }
+    .card.drag-over { border: 2px dashed var(--ink3) !important; opacity: .7; }
+    .day-col { width: 34px; flex: none; }
+    .day-short { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink3); }
+    .day-num { font-size: 15px; font-weight: 500; }
+    .day-long { display: none; }
+    .meal-col { flex: 1; min-width: 0; }
+    .meal-name { font-family: 'Newsreader', Georgia, serif; font-size: 19px; font-weight: 400; line-height: 1.2; }
+    .meal-desc { font-size: 12px; color: var(--ink2); margin-top: 2px; line-height: 1.4; }
+    .tagrow { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+    .tagrow:empty { display: none; }
+    .badge { display: inline-block; font-size: 11px; font-weight: 500; padding: 2px 10px; border-radius: 12px; }
+    .badge-fish { background: var(--fish-bg); color: var(--fish-ink); }
+    .badge-meat { background: var(--meat-bg); color: var(--meat-ink); }
+    .badge-veg  { background: var(--veg-bg);  color: var(--veg-ink); }
+    .today-label { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent-ink); }
+    .card-chevron { color: var(--ink3); display: flex; }
+    .card-extra { display: none; }
+
+    .cards.view-card { scroll-snap-type: y proximity; gap: 16px; padding: 20px 16px 110px; }
+    .cards.view-card .card { display: block; border-radius: 26px; padding: 26px 0 0; cursor: default; scroll-snap-align: start; scroll-margin-top: 12px; box-shadow: 0 10px 30px rgba(26,54,55,.12); overflow: hidden; }
+    .cards.view-card .card.today { background: var(--card); }
+    .cards.view-card .day-col { width: auto; padding: 0 24px; }
+    .cards.view-card .day-short, .cards.view-card .day-num { display: none; }
+    .cards.view-card .day-long { display: block; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink3); }
+    .cards.view-card .card.today .day-long { color: var(--accent-ink); }
+    .cards.view-card .meal-name { padding: 0 24px; font-size: 36px; line-height: 1.1; margin-top: 10px; }
+    .cards.view-card .meal-desc { padding: 0 24px; font-size: 15px; margin-top: 8px; }
+    .cards.view-card .tagrow { padding: 0 24px; margin: 14px 0 24px; }
+    .cards.view-card .card-chevron { display: none; }
+    .cards.view-card .card-extra { display: block; }
+
+    .nut-row { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .nut-box { padding: 16px 0; text-align: center; border-left: 1px solid var(--border); }
+    .nut-box:first-child { border-left: none; }
+    .nut-v { font-family: 'Newsreader', Georgia, serif; font-size: 24px; line-height: 1.1; white-space: nowrap; }
+    .nut-l { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink3); margin-top: 4px; }
+    details.mengen { padding: 0 24px; border-bottom: 1px solid var(--border); }
+    details.mengen summary { list-style: none; display: flex; justify-content: space-between; align-items: center; padding: 16px 0; font-size: 15px; cursor: pointer; }
+    details.mengen summary::-webkit-details-marker { display: none; }
+    details.mengen summary::after { content: ''; width: 7px; height: 7px; border-right: 1.5px solid var(--ink3); border-bottom: 1.5px solid var(--ink3); transform: rotate(45deg); margin-right: 4px; transition: transform .18s ease; }
+    details.mengen[open] summary::after { transform: rotate(225deg); }
+    .mengen-body { font-size: 14px; line-height: 1.7; padding-bottom: 14px; }
+    .card-edit-btn { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; background: none; border: none; color: var(--ink); font-size: 15px; cursor: pointer; }
+
+    /* FAB */
+    .fab { position: fixed; bottom: calc(30px + env(safe-area-inset-bottom, 0px)); right: max(calc(50% - 240px + 20px), 20px); width: 56px; height: 56px; border-radius: 50%; border: none; background: var(--amber); color: #2B1A0C; cursor: pointer; box-shadow: 0 8px 20px rgba(26,54,55,.3); z-index: 9; display: flex; align-items: center; justify-content: center; transition: transform .18s ease; }
+    .fab:active { transform: scale(.98); }
+
+    .empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 48px 24px; gap: 10px; color: var(--ink3); }
+    .empty-title { font-family: 'Newsreader', Georgia, serif; font-size: 24px; color: var(--ink); }
+    .empty-sub { font-size: 13px; line-height: 1.7; }
+    .footer { display: none; }
+
+    /* Sheets */
+    .overlay { position: fixed; inset: 0; z-index: 50; background: rgba(26,54,55,0); pointer-events: none; transition: background .25s; }
+    .overlay.show { background: var(--scrim); pointer-events: auto; }
+    .sheet { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%) translateY(105%); width: 100%; max-width: 480px; background: var(--sheet); border-radius: 28px 28px 0 0; border-top: 1px solid var(--border); z-index: 51; padding-bottom: max(env(safe-area-inset-bottom, 0px), 16px); transition: transform .3s cubic-bezier(.32,.72,0,1); max-height: 92dvh; overflow-y: auto; }
+    .sheet.show { transform: translateX(-50%) translateY(0); }
+    .sheet-grip { width: 40px; height: 4px; background: var(--border2); border-radius: 2px; margin: 10px auto 0; }
+    .sheet-inner { padding: 18px 22px 24px; }
+    .sheet-kicker { margin-bottom: 10px; }
+    .sheet-name { font-family: 'Newsreader', Georgia, serif; font-size: 30px; font-weight: 400; line-height: 1.15; }
+    .sheet-meta { font-size: 14px; color: var(--ink2); margin-top: 6px; line-height: 1.4; }
+    .sheet-edit { flex: none; display: flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border-radius: 18px; border: 1px solid var(--border2); background: none; color: var(--ink); font-size: 13px; cursor: pointer; }
+    .sheet .nut-row { gap: 8px; border: none; margin-top: 18px; }
+    .sheet .nut-box { background: var(--nut-s); border-radius: 12px; border-left: none; padding: 12px 4px; }
+    .sheet .nut-v { font-size: 22px; }
+    .mengen-card { margin-top: 12px; border-radius: 14px; padding: 14px 16px; background: var(--nut-s); }
+    .mengen-head { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink3); margin-bottom: 6px; }
+    .mengen-card .mengen-body { padding-bottom: 0; }
+
+    .form-label { display: block; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink3); margin: 12px 0 5px; }
+    .form-input { width: 100%; min-height: 42px; border: 1px solid var(--border); background: var(--input); color: var(--ink); border-radius: 12px; padding: 0 14px; font-size: 16px; font-family: inherit; }
+    textarea.form-input { padding: 11px 14px; resize: vertical; }
+    .form-input:focus { outline: none; border-color: var(--ink3); }
+    .btn-save { flex: 1; background: var(--btn); color: var(--btn-ink); border: none; border-radius: 24px; height: 48px; font-size: 15px; font-weight: 500; cursor: pointer; transition: transform .18s ease; }
+    .btn-save:active { transform: scale(.98); }
+    .btn-cancel { flex: 1; background: none; color: var(--ink); border: 1px solid var(--border2); border-radius: 24px; height: 48px; font-size: 15px; cursor: pointer; }
+    .btn-del { background: none; color: var(--danger-t); border: 1px solid var(--danger-t); border-radius: 16px; padding: 6px 14px; cursor: pointer; font-size: 13px; }
+
+    .action-btn { display: flex; align-items: center; gap: 16px; width: 100%; padding: 15px 0; background: none; border: none; border-bottom: 1px solid var(--border); font-size: 16px; color: var(--ink); cursor: pointer; text-align: left; }
+    .action-btn:last-child { border-bottom: none; }
+    .action-icon { width: 40px; height: 40px; border-radius: 50%; background: var(--nut-s); display: flex; align-items: center; justify-content: center; flex: none; }
+    .action-sub { font-size: 12px; color: var(--ink3); margin-top: 1px; }
+    .action-btn.danger { color: var(--danger-t); }
+
+    /* Gedanken-Seite */
+    .page { position: fixed; inset: 0; margin: 0 auto; max-width: 480px; z-index: 60; background: var(--page); display: flex; flex-direction: column; transform: translateX(100%); visibility: hidden; transition: transform .28s cubic-bezier(.32,.72,0,1), visibility 0s .28s; }
+    .page.show { transform: none; visibility: visible; transition-delay: 0s; }
+    .page-head { flex: none; color: #FFF9E2; padding: calc(env(safe-area-inset-top, 0px) + 14px) 20px 24px; border-radius: 0 0 28px 28px; background-image: linear-gradient(var(--veil), var(--veil)), url('./ref-leaves.jpg'); background-size: cover; background-position: center top; }
+    .back-btn { display: inline-flex; align-items: center; gap: 10px; background: none; border: none; color: inherit; font-size: 14px; cursor: pointer; }
+    .back-btn .hbtn { pointer-events: none; }
+    .page-title { font-family: 'Newsreader', Georgia, serif; font-size: 38px; line-height: 1.1; margin-top: 18px; }
+    .page-body { flex: 1; overflow-y: auto; padding: 26px 16px 16px; display: flex; flex-direction: column; gap: 12px; }
+    .g-note { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 14px 16px; display: flex; align-items: center; gap: 14px; }
+    .g-note[hidden] { display: none; }
+    .g-note-text { flex: 1; font-size: 15px; }
+    .g-note-text small { display: block; font-size: 12px; color: var(--ink3); margin-top: 1px; }
+    .g-note button { height: 34px; padding: 0 16px; border-radius: 17px; background: var(--btn); color: var(--btn-ink); border: none; font-size: 13px; font-weight: 500; cursor: pointer; }
+    .g-count { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink3); margin: 10px 4px 0; }
+    .g-list { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 0 16px; }
+    .g-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 16px 0; border-bottom: 1px solid var(--border); font-size: 16px; }
+    .g-item:last-child { border-bottom: none; }
+    .g-item button { background: none; border: none; color: var(--ink3); cursor: pointer; display: flex; padding: 4px; }
+    .g-empty { padding: 16px 0; font-size: 14px; color: var(--ink3); }
+    .page-foot { flex: none; display: flex; gap: 10px; padding: 12px 16px calc(24px + env(safe-area-inset-bottom, 0px)); }
+    .page-foot .form-input { border-radius: 25px; height: 50px; padding: 0 20px; background: var(--card); }
+    .page-foot button { flex: none; width: 50px; height: 50px; border-radius: 50%; border: none; background: var(--amber); color: #2B1A0C; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    </style>
 </head>
 <body>
-<div class="app">
+<div class="app mode-card" id="app">
 
   <div class="header">
     <div class="header-row">
-      <div class="brand">
-        <div class="brand-icon">🍽️</div>
-        <div class="brand-text">
-          <div class="title">Wochenplan</div>
-          <div class="subtitle">4-Wochen-Plan</div>
+      <div class="brand-text">
+        <div class="title">Wochenplan</div>
+        <div class="subtitle">
+          <span class="dot" id="dot"></span>
+          <select class="group-select" id="group-select" onchange="onGroupChange(this.value)"></select>
+          <button class="group-add-btn" onclick="createGroup()" title="Neue Gruppe"><svg width="13" height="13" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+          <span id="status-text" hidden></span>
         </div>
       </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <button class="view-toggle-btn" id="view-toggle-btn" onclick="toggleView()">☰ Liste</button>
+      <div class="header-actions">
+        <button class="hbtn" id="view-toggle-btn" onclick="toggleView()" title="Ansicht wechseln"><svg width="19" height="19" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></button>
         <div class="btn-wrap">
-          <button class="refresh-btn" id="gedanken-btn" onclick="openGedanken()" title="Gedanken">💭</button>
+          <button class="hbtn" id="gedanken-btn" onclick="openGedanken()" title="Gedanken"><svg width="19" height="19" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></button>
           <span class="icon-badge" id="gedanken-badge" hidden>0</span>
         </div>
-        <button class="refresh-btn" id="refresh-btn" onclick="loadPlan()" title="Aktualisieren">
-          <span id="refresh-icon">↻</span>
-        </button>
+        <button class="hbtn" id="refresh-btn" onclick="loadPlan()" title="Aktualisieren"><span id="refresh-icon" style="display:inline-flex"><svg width="19" height="19" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16M8 16H3v5"/></svg></span></button>
       </div>
     </div>
-
-    <div class="week-nav">
-      <button class="nav-btn" id="prev-btn" onclick="changeWeek(-1)" title="Vorherige Woche">‹</button>
-      <div class="week-center">
+    <div class="week-block">
+      <div>
+        <div class="week-count" id="week-count"></div>
+        <div class="week-kw" id="week-kw"></div>
         <div class="week-dates" id="week-dates"></div>
-        <div class="week-pips" id="week-pips"></div>
       </div>
-      <button class="nav-btn" id="next-btn" onclick="changeWeek(1)" title="Nächste Woche">›</button>
-    </div>
-
-    <div class="group-bar">
-      <select class="group-select" id="group-select" onchange="onGroupChange(this.value)"></select>
-      <button class="group-add-btn" onclick="createGroup()" title="Neue Gruppe">+</button>
-    </div>
-
-    <div class="status-row">
-      <div class="dot" id="dot"></div>
-      <div class="status-text" id="status-text">Wird geladen …</div>
+      <div class="week-arrows">
+        <button class="nav-btn" id="prev-btn" onclick="changeWeek(-1)" title="Vorherige Woche"><svg width="18" height="18" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
+        <button class="nav-btn" id="next-btn" onclick="changeWeek(1)" title="Nächste Woche"><svg width="18" height="18" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+      </div>
     </div>
   </div>
 
-  <div class="pills" id="pills" style="display:none">
-    <div class="pill"><div class="pill-val" id="p-fish">–</div><div class="pill-lbl">Fisch</div></div>
-    <div class="pill"><div class="pill-val" id="p-meat">–</div><div class="pill-lbl">Fleisch</div></div>
-    <div class="pill"><div class="pill-val" id="p-total">–</div><div class="pill-lbl">Gerichte</div></div>
-  </div>
-
+  <div class="daystrip" id="daystrip"></div>
   <div class="cards" id="cards"></div>
 
-  <button class="fab" onclick="openEdit(null)" title="Neuer Eintrag">+</button>
-
+  <button class="fab" onclick="openEdit(null)" title="Neuer Eintrag"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
   <div class="footer" id="footer"></div>
-
 </div>
 
 <div class="overlay" id="overlay" onclick="closeModal()"></div>
 <div class="sheet" id="sheet">
   <div class="sheet-grip"></div>
   <div class="sheet-inner" id="sheet-inner"></div>
+</div>
+
+<div class="page" id="gedanken-page">
+  <div class="page-head">
+    <button class="back-btn" onclick="closePage()"><span class="hbtn"><svg width="19" height="19" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></span>Wochenplan</button>
+    <div class="page-title">Gedanken</div>
+  </div>
+  <div class="page-body">
+    <div class="g-note" id="g-note" hidden></div>
+    <div class="g-count" id="g-count"></div>
+    <div class="g-list" id="gedanken-list">Wird geladen …</div>
+  </div>
+  <div class="page-foot">
+    <input id="gedanken-input" class="form-input" placeholder="z. B. Kaffee kaufen" onkeydown="if(event.key==='Enter')addGedanke()">
+    <button onclick="addGedanke()" title="Hinzufügen"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+  </div>
 </div>
 
 <script>
@@ -793,6 +302,18 @@ var swipeStartX  = 0, swipeStartY = 0, swipeStartT = 0;
 var lpTimer      = null;
 var lpBufIdx     = null;
 var lpFired      = false;
+var PATHS = {
+  list:'<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>', card:'<rect x="4" y="3" width="16" height="18" rx="3"/>', right:'<path d="m9 18 6-6-6-6"/>', left:'<path d="m15 18-6-6 6-6"/>', plus:'<path d="M12 5v14M5 12h14"/>',
+  pencil:'<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>',
+  move:'<path d="m21 16-4 4-4-4M17 20V4M3 8l4-4 4 4M7 4v16"/>',
+  swap:'<path d="m17 2 4 4-4 4M3 11v-1a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v1a4 4 0 0 1-4 4H3"/>',
+  x:'<path d="M18 6 6 18M6 6l12 12"/>',
+  alert:'<path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/>',
+  clip:'<rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>',
+  bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"/>'
+};
+function ic(n, s) { s = s || 18; return '<svg width="' + s + '" height="' + s + '" viewBox="0 0 24 24">' + PATHS[n] + '</svg>'; }
+var didInitialScroll = false;
 
 // ── Snap-Höhe & View-Toggle ───────────────────────────────────────────────
 
@@ -808,16 +329,9 @@ window.addEventListener('resize', function() {
 
 function toggleView() {
   viewMode = viewMode === 'card' ? 'list' : 'card';
-  var btn   = document.getElementById('view-toggle-btn');
-  var cards = document.getElementById('cards');
-  if (viewMode === 'card') {
-    cards.classList.add('view-card');
-    btn.textContent = '☰ Liste';
-    setSnapHeight();
-  } else {
-    cards.classList.remove('view-card');
-    btn.textContent = '⊟ Karte';
-  }
+  document.getElementById('cards').classList.toggle('view-card', viewMode === 'card');
+  document.getElementById('app').classList.toggle('mode-card', viewMode === 'card');
+  document.getElementById('view-toggle-btn').innerHTML = viewMode === 'card' ? ic('list', 19) : ic('card', 19);
   render(allWeeks, planIdx);
 }
 
@@ -826,11 +340,18 @@ function toggleView() {
 var cardsEl = document.getElementById('cards');
 
 cardsEl.addEventListener('scroll', function() {
-  var maxScroll = Math.max(this.scrollHeight - this.clientHeight, 1);
-  document.body.style.backgroundPositionY =
-    (this.scrollTop / maxScroll * 100).toFixed(1) + '%';
   document.querySelector('.header').classList.toggle('collapsed', this.scrollTop > 10);
+  if (viewMode !== 'card') return;
+  var cs = this.querySelectorAll('.card'), cur = 0, y = this.scrollTop + 40;
+  for (var i = 0; i < cs.length; i++) { if (cs[i].offsetTop <= y + 20) cur = i; }
+  document.querySelectorAll('#daystrip .chip').forEach(function(c, i) { c.classList.toggle('on', i === cur); });
 }, { passive: true });
+
+function scrollToCard(i, instant) {
+  var c = document.querySelector('.card[data-i="' + i + '"]');
+  if (!c) return;
+  cardsEl.scrollTo({ top: c.offsetTop - 12, behavior: instant ? 'auto' : 'smooth' });
+}
 
 document.querySelector('.header').addEventListener('transitionend', function(e) {
   if (e.propertyName === 'max-height') setSnapHeight();
@@ -875,28 +396,17 @@ function onLpMove() { clearTimeout(lpTimer); lpTimer = null; }
 
 function openCardActions(bufIdx) {
   var row = rowBuffer[bufIdx];
+  function btn(cls, click, icon, t, sub) {
+    return '<button class="action-btn ' + cls + '" onclick="' + click + '">' +
+      '<span class="action-icon">' + ic(icon, 19) + '</span>' +
+      '<div><div>' + t + '</div>' + (sub ? '<div class="action-sub">' + sub + '</div>' : '') + '</div></button>';
+  }
   document.getElementById('sheet-inner').innerHTML =
-    '<div style="font-family:\'Lora\',serif;font-size:18px;margin-bottom:16px">' +
-      esc(row['Gericht'] || '–') +
-    '</div>' +
-    '<button class="action-btn" onclick="closeModal();openMove(' + bufIdx + ')">' +
-      '<span class="action-icon">↕️</span>' +
-      '<div><div>Verschieben</div>' +
-      '<div style="font-size:12px;color:var(--text3)">In andere Woche oder anderen Tag verschieben</div></div>' +
-    '</button>' +
-    '<button class="action-btn" onclick="closeModal();openReplace(' + bufIdx + ')">' +
-      '<span class="action-icon">🔄</span>' +
-      '<div><div>Ersetzen</div>' +
-      '<div style="font-size:12px;color:var(--text3)">Inhalt mit einem anderen Tag tauschen</div></div>' +
-    '</button>' +
-    '<button class="action-btn" onclick="closeModal();openEdit(rowBuffer[' + bufIdx + '])">' +
-      '<span class="action-icon">✏️</span>' +
-      '<div><div>Bearbeiten</div>' +
-      '<div style="font-size:12px;color:var(--text3)">Felder direkt bearbeiten</div></div>' +
-    '</button>' +
-    '<button class="action-btn" onclick="closeModal()" style="color:var(--coral)">' +
-      '<span class="action-icon">✕</span><div>Abbrechen</div>' +
-    '</button>';
+    '<div style="font-family:Newsreader,Georgia,serif;font-size:26px;margin-bottom:6px">' + esc(row['Gericht'] || '–') + '</div>' +
+    btn('', 'closeModal();openMove(' + bufIdx + ')', 'move', 'Verschieben', 'In andere Woche oder anderen Tag verschieben') +
+    btn('', 'closeModal();openReplace(' + bufIdx + ')', 'swap', 'Ersetzen', 'Inhalt mit einem anderen Tag tauschen') +
+    btn('', 'closeModal();openEdit(rowBuffer[' + bufIdx + '])', 'pencil', 'Bearbeiten', 'Felder direkt bearbeiten') +
+    btn('danger', 'closeModal()', 'x', 'Abbrechen', '');
   document.getElementById('overlay').classList.add('show');
   document.getElementById('sheet').classList.add('show');
 }
@@ -906,7 +416,7 @@ function openCardActions(bufIdx) {
 function openMove(bufIdx) {
   var row = rowBuffer[bufIdx];
   document.getElementById('sheet-inner').innerHTML =
-    '<div style="font-family:\'Lora\',serif;font-size:18px;margin-bottom:14px">Verschieben</div>' +
+    '<div style="font-family:\'Newsreader\',serif;font-size:26px;margin-bottom:14px">Verschieben</div>' +
     '<label class="form-label">Ziel-Woche</label>' +
     '<select id="mv-week" class="form-input">' +
       [1,2,3,4].map(function(w) {
@@ -944,7 +454,7 @@ async function confirmMove(bufIdx) {
 function openReplace(bufIdx) {
   var row = rowBuffer[bufIdx];
   document.getElementById('sheet-inner').innerHTML =
-    '<div style="font-family:\'Lora\',serif;font-size:18px;margin-bottom:14px">Ersetzen mit …</div>' +
+    '<div style="font-family:\'Newsreader\',serif;font-size:26px;margin-bottom:14px">Ersetzen mit …</div>' +
     '<label class="form-label">Woche</label>' +
     '<select id="rp-week" class="form-input">' +
       [1,2,3,4].map(function(w) {
@@ -1001,20 +511,17 @@ async function confirmReplace(bufIdx) {
 
 async function openGedanken() {
   var showPushBtn = ('Notification' in window) && Notification.permission !== 'granted';
-  document.getElementById('sheet-inner').innerHTML =
-    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">' +
-      '<div style="font-family:\'Lora\',serif;font-size:18px">💭 Gedanken</div>' +
-      (showPushBtn ? '<button class="btn-cancel" style="flex:0 0 auto;padding:6px 12px;font-size:13px" onclick="enablePush()">🔔 Benachrichtigungen aktivieren</button>' : '') +
-    '</div>' +
-    '<div id="gedanken-list" style="margin-bottom:14px">Wird geladen …</div>' +
-    '<div style="display:flex;gap:8px">' +
-      '<input id="gedanken-input" class="form-input" placeholder="z. B. Kaffee kaufen" onkeydown="if(event.key===\'Enter\')addGedanke()">' +
-      '<button class="btn-save" style="flex:0 0 auto;padding:8px 16px" onclick="addGedanke()">+</button>' +
-    '</div>';
-  document.getElementById('overlay').classList.add('show');
-  document.getElementById('sheet').classList.add('show');
+  var note = document.getElementById('g-note');
+  note.hidden = !showPushBtn;
+  note.innerHTML = ic('bell', 22) + '<div class="g-note-text">Benachrichtigungen<small>Neue Gedanken aufs Handy</small></div>' +
+    '<button onclick="enablePush()">Aktivieren</button>';
+  closeModal();
+  document.getElementById('gedanken-page').classList.add('show');
   await renderGedanken();
   await markGedankenSeen();
+}
+function closePage() {
+  document.getElementById('gedanken-page').classList.remove('show');
 }
 
 async function renderGedanken() {
@@ -1032,7 +539,7 @@ async function renderGedanken() {
       try { rows = JSON.parse(cached); } catch (e) {}
     }
     if (!rows) {
-      list.innerHTML = '<div style="font-size:13px;color:var(--text3)">Noch nicht eingerichtet: ' + esc(result.error.message) + '</div>';
+      list.innerHTML = '<div class="g-empty">Noch nicht eingerichtet: ' + esc(result.error.message) + '</div>';
       return;
     }
   } else {
@@ -1040,17 +547,17 @@ async function renderGedanken() {
     localStorage.setItem(GEDANKEN_CACHE_KEY, JSON.stringify(rows));
   }
 
+  var gc = document.getElementById('g-count');
+  if (gc) gc.textContent = rows.length + (rows.length === 1 ? ' Eintrag' : ' Einträge');
   if (!rows.length) {
-    list.innerHTML = '<div style="font-size:13px;color:var(--text3)">Noch keine Gedanken.</div>';
+    list.innerHTML = '<div class="g-empty">Noch keine Gedanken.</div>';
     return;
   }
   list.innerHTML =
-    (result.error ? '<div style="font-size:11px;color:var(--text3);margin-bottom:8px">Aus Cache · offline</div>' : '') +
+    (result.error ? '<div class="g-empty">Aus Cache · offline</div>' : '') +
     rows.map(function(r) {
-      return '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--border)">' +
-        '<div style="font-size:14px">' + esc(r.text) + '</div>' +
-        '<button class="btn-del" onclick="deleteGedanke(' + r.id + ')">✕</button>' +
-      '</div>';
+      return '<div class="g-item"><span>' + esc(r.text) + '</span>' +
+        '<button onclick="deleteGedanke(' + r.id + ')" title="Löschen">' + ic('x', 18) + '</button></div>';
     }).join('');
 }
 
@@ -1071,7 +578,7 @@ async function deleteGedanke(id) {
   await renderGedanken();
 }
 
-// ── Gedanken-Badge (Home-Bildschirm-Icon + 💭-Button) ────────────────────
+// ── Gedanken-Badge (Home-Bildschirm-Icon + Gedanken-Button) ────────────────────
 
 async function refreshGedankenBadge() {
   if (!currentGroup) return;
@@ -1261,10 +768,9 @@ async function loadPlan() {
       } catch(e) {}
     }
     setStatus('err', 'Fehler: ' + err.message);
-    document.getElementById('pills').style.display = 'none';
     document.getElementById('footer').textContent = '';
     document.getElementById('cards').innerHTML =
-      '<div class="empty"><div class="empty-icon">⚠️</div>' +
+      '<div class="empty">' + ic('alert', 32) +
       '<div class="empty-title">Verbindungsfehler</div>' +
       '<div class="empty-sub">Supabase nicht erreichbar.<br>' + esc(err.message) + '</div></div>';
   }
@@ -1278,7 +784,7 @@ function openEdit(row) {
   var r = row || {};
   document.getElementById('sheet-inner').innerHTML =
     '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">' +
-      '<div style="font-family:\'Lora\',serif;font-size:18px">' + (isNew ? 'Neuer Eintrag' : 'Bearbeiten') + '</div>' +
+      '<div style="font-family:\'Newsreader\',serif;font-size:26px">' + (isNew ? 'Neuer Eintrag' : 'Bearbeiten') + '</div>' +
       (!isNew ? '<button class="btn-del" onclick="deleteEntry()">Löschen</button>' : '') +
     '</div>' +
     (isNew ?
@@ -1365,16 +871,12 @@ function openModal(idx) {
   var mengenLines = mengen ? mengen.split(/,\s*/).map(esc).join('<br>') : '';
 
   document.getElementById('sheet-inner').innerHTML =
-    '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">' +
+    '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">' +
       '<div>' +
         (badge ? '<div class="sheet-kicker">' + badge + '</div>' : '') +
         '<div class="sheet-name">' + esc(row['Gericht'] || '–') + '</div>' +
       '</div>' +
-      '<button onclick="openEdit(rowBuffer[' + idx + '])" ' +
-        'style="background:var(--surface2);border:none;border-radius:8px;padding:6px 12px;' +
-        'cursor:pointer;font-size:13px;flex-shrink:0;margin-left:12px;font-family:inherit">' +
-        '✏️ Edit' +
-      '</button>' +
+      '<button class="sheet-edit" onclick="openEdit(rowBuffer[' + idx + '])">' + ic('pencil', 15) + 'Bearbeiten</button>' +
     '</div>' +
     (desc ? '<div class="sheet-meta">' + esc(desc) + '</div>' : '') +
     '<div class="nut-row">' +
@@ -1415,14 +917,8 @@ function render(weeks, idx) {
   var kw  = getISOWeek(mon);
   var sun = new Date(mon); sun.setDate(mon.getDate() + 6);
 
-  document.getElementById('week-dates').textContent =
-    'KW ' + kw + ' · ' + fmtD(mon) + ' – ' + fmtD(sun) + ' ' + sun.getFullYear();
-
-  var pipsHtml = '';
-  for (var p = 0; p < weeks.length; p++) {
-    pipsHtml += '<div class="pip' + (p === idx ? ' on' : '') + '"></div>';
-  }
-  document.getElementById('week-pips').innerHTML = pipsHtml;
+  document.getElementById('week-count').textContent = 'Woche ' + (idx + 1) + ' von ' + weeks.length;
+  document.getElementById('week-kw').textContent = 'KW ' + kw;
   updateNavButtons();
 
   var byDay = {};
@@ -1431,7 +927,7 @@ function render(weeks, idx) {
   });
 
   rowBuffer = [];
-  var fish = 0, meat = 0, total = 0, html = '';
+  var total = 0, html = '', chips = '', todayIdx = -1;
   var isCard = viewMode === 'card';
 
   DAYS_LONG.forEach(function(day, i) {
@@ -1443,22 +939,22 @@ function render(weeks, idx) {
     var bufIdx = rowBuffer.length;
     rowBuffer.push(row);
     total++;
+    if (today) todayIdx = bufIdx;
 
     var type  = detectType(row['Gericht']);
-    if (type === 'fish') fish++;
-    if (type === 'meat') meat++;
-
     var desc  = [row['Beilage'], row['Gemüse']].filter(Boolean).join(' · ');
     var badge = type === 'fish' ? '<span class="badge badge-fish">Fisch</span>'
               : type === 'meat' ? '<span class="badge badge-meat">Fleisch</span>'
               : type === 'veg'  ? '<span class="badge badge-veg">Vegetarisch</span>'
               : '';
-
     var mengen = (row['Mengenangaben (2 Personen)'] || '').trim();
     var mengenLines = mengen ? mengen.split(/,\s*/).map(esc).join('<br>') : '';
+    var longLabel = today ? 'Heute · ' + day : day + ' · ' + date.getDate() + '.';
+
+    chips += '<button class="chip" onclick="scrollToCard(' + bufIdx + ')"><span>' + DAYS_SHORT[i] + '</span><b>' + date.getDate() + '</b></button>';
 
     html +=
-      '<div class="card' + (today ? ' today' : '') + '"' +
+      '<div class="card' + (today ? ' today' : '') + '" data-i="' + bufIdx + '"' +
       ' draggable="true"' +
       ' ondragstart="onDragStart(event,' + bufIdx + ')"' +
       ' ondragover="onDragOver(event)"' +
@@ -1476,12 +972,12 @@ function render(weeks, idx) {
         '<div class="day-col">' +
           '<div class="day-short">' + DAYS_SHORT[i] + '</div>' +
           '<div class="day-num">' + date.getDate() + '.</div>' +
-          (today ? '<div class="today-dot"></div>' : '') +
+          '<div class="day-long">' + longLabel + '</div>' +
         '</div>' +
         '<div class="meal-col">' +
           '<div class="meal-name">' + esc(row['Gericht'] || '–') + '</div>' +
           (desc ? '<div class="meal-desc">' + esc(desc) + '</div>' : '') +
-          badge +
+          '<div class="tagrow">' + badge + (today && !isCard ? '<span class="today-label">Heute</span>' : '') + '</div>' +
           '<div class="card-extra">' +
             '<div class="nut-row">' +
               nutBox(row['kcal'], 'kcal') +
@@ -1490,27 +986,30 @@ function render(weeks, idx) {
               nutBox(row['Kohlenhydrate'], 'KH') +
             '</div>' +
             (mengenLines ?
-              '<div class="mengen-card" style="margin-top:12px">' +
-                '<div class="mengen-head">Mengenangaben · 2 Personen</div>' +
-                '<div class="mengen-body">' + mengenLines + '</div>' +
-              '</div>'
+              '<details class="mengen"><summary>Mengenangaben · 2 Personen</summary>' +
+                '<div class="mengen-body">' + mengenLines + '</div></details>'
             : '') +
-            '<button class="card-edit-btn" onclick="event.stopPropagation();openEdit(rowBuffer[' + bufIdx + '])">✏️ Bearbeiten</button>' +
+            '<button class="card-edit-btn" onclick="event.stopPropagation();openEdit(rowBuffer[' + bufIdx + '])"><span>Bearbeiten</span>' + ic('right', 18) + '</button>' +
           '</div>' +
         '</div>' +
-        (!isCard ? '<div class="card-chevron">›</div>' : '') +
+        (!isCard ? '<div class="card-chevron">' + ic('right', 18) + '</div>' : '') +
       '</div>';
   });
 
+  document.getElementById('week-dates').textContent =
+    fmtD(mon) + ' – ' + fmtD(sun) + ' ' + sun.getFullYear() + ' · ' + total + ' Gerichte';
+  document.getElementById('daystrip').innerHTML = chips;
   document.getElementById('cards').innerHTML = html ||
-    '<div class="empty"><div class="empty-icon">📋</div>' +
+    '<div class="empty">' + ic('clip', 32) +
     '<div class="empty-title">Keine Einträge</div>' +
-    '<div class="empty-sub">Für diese Gruppe noch kein Plan angelegt.<br>Tippe auf + um Einträge hinzuzufügen.</div></div>';
+    '<div class="empty-sub">Für diese Gruppe noch kein Plan angelegt.<br>Tippe auf +, um Einträge hinzuzufügen.</div></div>';
 
-  document.getElementById('p-fish').textContent  = fish + '×';
-  document.getElementById('p-meat').textContent  = meat + '×';
-  document.getElementById('p-total').textContent = total;
-  document.getElementById('pills').style.display = 'flex';
+  var strip = document.querySelectorAll('#daystrip .chip');
+  if (strip.length) (strip[Math.max(todayIdx, 0)]).classList.add('on');
+  if (isCard && todayIdx > 0 && !didInitialScroll) {
+    didInitialScroll = true;
+    setTimeout(function() { scrollToCard(todayIdx, true); }, 0);
+  }
 }
 
 // ── Drag & Drop ───────────────────────────────────────────────────────────
@@ -1578,6 +1077,7 @@ function updateNavButtons() {
 // ── Tastatur ──────────────────────────────────────────────────────────────
 
 document.addEventListener('keydown', function(e) {
+  if (document.getElementById('gedanken-page').classList.contains('show')) { if (e.key === 'Escape') closePage(); return; }
   if (document.getElementById('sheet').classList.contains('show')) {
     if (e.key === 'Escape') { closeModal(); }
     return;
@@ -1589,11 +1089,11 @@ document.addEventListener('keydown', function(e) {
 // ── Status-UI ─────────────────────────────────────────────────────────────
 
 function setStatus(type, msg) {
-  document.getElementById('dot').className          = 'dot ' + type;
+  var d = document.getElementById('dot');
+  d.className = 'dot ' + type;
+  d.title = msg;
   document.getElementById('status-text').textContent = msg;
-  var icon = document.getElementById('refresh-icon');
-  icon.className   = type === 'load' ? 'spinning' : '';
-  icon.textContent = '↻';
+  document.getElementById('refresh-icon').className = type === 'load' ? 'spinning' : '';
   document.getElementById('refresh-btn').disabled = type === 'load';
 }
 
@@ -1658,6 +1158,7 @@ if ('serviceWorker' in navigator) {
   // Karten-Modus nach erstem Layout aktivieren
   requestAnimationFrame(function() {
     document.getElementById('cards').classList.add('view-card');
+    document.getElementById('app').classList.add('mode-card');
     setSnapHeight();
   });
 
