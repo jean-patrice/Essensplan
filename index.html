@@ -1230,6 +1230,8 @@ if ('serviceWorker' in navigator) {
     await loadGroups();
     await loadPlan();
   } finally {
+    // Ladebildschirm mindestens 1,2 s ab Seitenstart zeigen
+    await new Promise(function(r) { setTimeout(r, Math.max(0, 1200 - performance.now())); });
     var sp = document.getElementById('splash');
     if (sp) { sp.classList.add('weg'); setTimeout(function() { sp.remove(); }, 400); }
   }
