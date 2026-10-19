@@ -7,9 +7,9 @@ const m = html.match(/\/\/ <einkauf-pure>([\s\S]*?)\/\/ <\/einkauf-pure>/);
 assert.ok(m, 'Marker // <einkauf-pure> fehlt in index.html');
 
 // getMondayOffset/fmtD sind Seiten-Funktionen; hier als Stubs (Montag 8.6.2026)
-const { parseZutaten, zaehleZutaten, chargeLabel } = new Function(
+const { parseZutaten, zaehleZutaten, chargeLabel, nurNeue } = new Function(
   'getMondayOffset', 'fmtD',
-  m[1] + '; return { parseZutaten, zaehleZutaten, chargeLabel };'
+  m[1] + '; return { parseZutaten, zaehleZutaten, chargeLabel, nurNeue };'
 )(
   (off) => new Date(2026, 5, 8 + off * 7),
   (d) => d.getDate() + '.' + (d.getMonth() + 1) + '.'
@@ -34,4 +34,9 @@ test('zaehleZutaten zählt Tage, case-insensitiv, einmal pro Zeile', () => {
 });
 test('chargeLabel', () => {
   assert.equal(chargeLabel(1, 0), 'Woche 2 · 8.6.–14.6.');
+});
+test('nurNeue lässt Zutaten weg, die in derselben Charge schon stehen (Liste oder Wagen)', () => {
+  const rows = [{ charge: 'Woche 1', name: 'Reis', im_wagen: true }, { charge: 'Woche 2', name: 'Pute' }];
+  const items = [{ name: 'reis', tage: 2 }, { name: 'Pute', tage: 1 }, { name: 'Fisch', tage: 1 }];
+  assert.deepEqual(nurNeue(items, 'Woche 1', rows), [{ name: 'Pute', tage: 1 }, { name: 'Fisch', tage: 1 }]);
 });

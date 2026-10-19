@@ -169,9 +169,9 @@
     .footer { display: none; }
 
     /* Sheets */
-    .overlay { position: fixed; inset: 0; z-index: 50; background: rgba(26,54,55,0); pointer-events: none; transition: background .25s; }
+    .overlay { position: fixed; inset: 0; z-index: 70; background: rgba(26,54,55,0); pointer-events: none; transition: background .25s; }
     .overlay.show { background: var(--scrim); pointer-events: auto; }
-    .sheet { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%) translateY(105%); width: 100%; max-width: 480px; background: var(--sheet); border-radius: 28px 28px 0 0; border-top: 1px solid var(--border); z-index: 51; padding-bottom: max(env(safe-area-inset-bottom, 0px), 16px); transition: transform .3s cubic-bezier(.32,.72,0,1); max-height: 92dvh; overflow-y: auto; }
+    .sheet { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%) translateY(105%); width: 100%; max-width: 480px; background: var(--sheet); border-radius: 28px 28px 0 0; border-top: 1px solid var(--border); z-index: 71; padding-bottom: max(env(safe-area-inset-bottom, 0px), 16px); transition: transform .3s cubic-bezier(.32,.72,0,1); max-height: 92dvh; overflow-y: auto; }
     .sheet.show { transform: translateX(-50%) translateY(0); }
     .sheet-grip { width: 40px; height: 4px; background: var(--border2); border-radius: 2px; margin: 10px auto 0; }
     .sheet-inner { padding: 18px 22px 24px; }
@@ -842,6 +842,13 @@ function chargeLabel(weekIdx, mondayOffset) {
   sun.setDate(mon.getDate() + 6);
   return 'Woche ' + (weekIdx + 1) + ' · ' + fmtD(mon) + '–' + fmtD(sun);
 }
+
+// Zutaten, die in dieser Charge schon stehen (Liste oder Wagen), nicht noch einmal anlegen
+function nurNeue(items, charge, rows) {
+  var da = {};
+  rows.forEach(function(r) { if (r.charge === charge) da[r.name.toLowerCase()] = 1; });
+  return items.filter(function(i) { return !da[i.name.toLowerCase()]; });
+}
 // </einkauf-pure>
 
 var einkauf = [];   // alle Zeilen der Gruppe: { id, name, tage, im_wagen, charge }
@@ -883,14 +890,15 @@ function updateWagenBadge() {
   el.hidden = n === 0;
 }
 
-// start: 0 = ab dieser Woche, 1 = ab nächster; anzahl: 1, 2 oder 4 Wochen. Liefert Anzahl neuer Kacheln.
+// start: 0 = ab dieser Woche, 1 = ab nächster; anzahl: 1, 2 oder 4 Wochen. Liefert Anzahl neuer Kacheln (bereits vorhandene Zutaten einer Woche werden übersprungen).
 async function erstelleEinkauf(start, anzahl) {
+  await loadEinkauf();   // aktueller Stand (z. B. von anderem Gerät), sonst entstehen Doppelte
   var cur = getCurrentPlanIdx(), n = 0;
   for (var k = start; k < start + anzahl; k++) {
     var idx = (cur + k) % 4;
-    var items = zaehleZutaten(allWeeks[idx] || []);
+    var charge = chargeLabel(idx, k), items = nurNeue(zaehleZutaten(allWeeks[idx] || []), charge, einkauf);
     if (!items.length) continue;
-    if (!(await addEinkaufBatch(items, chargeLabel(idx, k)))) return n;
+    if (!(await addEinkaufBatch(items, charge))) return n;
     n += items.length;
   }
   return n;
@@ -1514,8 +1522,8 @@ async function eCreate() {
   var p = [[0, 1], [1, 1], [0, 2], [0, 4]][eSel];
   if (await erstelleEinkauf(p[0], p[1]) > 0) { closeModal(); eOpenList(); return; }
   document.getElementById('sheet-inner').innerHTML =
-    '<div style="text-align:center;padding:18px 0 8px"><div style="font-family:\'Newsreader\',serif;font-size:26px">Keine Zutaten gefunden</div>' +
-    '<div style="font-size:14px;color:var(--ink2);margin-top:8px;line-height:1.5">Für die gewählten Wochen gibt es keine Mengenangaben.</div></div>' +
+    '<div style="text-align:center;padding:18px 0 8px"><div style="font-family:\'Newsreader\',serif;font-size:26px">Nichts hinzugefügt</div>' +
+    '<div style="font-size:14px;color:var(--ink2);margin-top:8px;line-height:1.5">Die Zutaten der gewählten Wochen stehen schon in der Liste oder im Wagen, oder es gibt keine Mengenangaben.</div></div>' +
     '<div style="display:flex;gap:8px;margin-top:18px"><button class="btn-save" onclick="eOpenCreate()">Andere Auswahl</button><button class="btn-cancel" onclick="closeModal()">Schließen</button></div>';
 }
 
