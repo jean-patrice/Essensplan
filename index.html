@@ -232,6 +232,30 @@
     .menu-sep { height: 1px; background: var(--border); margin: 6px 0; }
     .menu-item .chk { width: 16px; height: 16px; opacity: 0; }
     .menu-item.on .chk { opacity: 1; }
+    /* Einkaufsliste */
+    .brand-text { min-width: 0; }
+    @media (max-width: 400px) { .hbtn { width: 36px; height: 36px; } .header-actions { gap: 6px; } }
+    .e-group { margin: 32px 4px 10px; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink3); }
+    .e-group:first-child { margin-top: 0; }
+    .e-tiles { display: flex; flex-direction: column; gap: 8px; }
+    .tile-wrap { position: relative; border-radius: 18px; overflow: hidden; flex: none; max-height: 80px; transition: max-height .22s ease, margin .22s ease, opacity .22s ease; }
+    .tile-wrap.gone { max-height: 0; margin-top: -8px; opacity: 0; }
+    .tile-bg { position: absolute; inset: 0; display: flex; align-items: center; opacity: 0; color: #FFF9E2; padding: 0 22px; }
+    .tile-bg.del { background: var(--danger); justify-content: flex-end; }
+    .tile-bg.buy { background: #4F6B3F; justify-content: flex-start; }
+    .tile { position: relative; min-height: 56px; background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; touch-action: pan-y; user-select: none; -webkit-user-select: none; cursor: pointer; }
+    .tile.static { cursor: default; }
+    .t-name { font-family: 'Newsreader', Georgia, serif; font-size: 19px; line-height: 1.2; }
+    .t-days { flex: none; font-size: 12px; color: var(--ink3); }
+    .e-empty { padding: 56px 24px; text-align: center; color: var(--ink3); }
+    .e-empty .empty-title { font-family: 'Newsreader', Georgia, serif; font-size: 24px; color: var(--ink); margin-bottom: 6px; }
+    .btn-danger { width: 100%; height: 48px; border-radius: 24px; border: 1px solid var(--danger-t); background: none; color: var(--danger-t); font-size: 15px; font-weight: 500; cursor: pointer; }
+    .opt { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 56px; padding: 0 16px; margin-top: 8px; border-radius: 18px; border: 1px solid var(--border); background: var(--card); color: var(--ink); font-size: 16px; text-align: left; cursor: pointer; }
+    .opt .rad { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--border2); flex: none; display: flex; align-items: center; justify-content: center; }
+    .opt.on { border-color: var(--btn); background: var(--nut-s); }
+    .opt.on .rad { border-color: var(--btn); }
+    .opt.on .rad::after { content: ''; width: 10px; height: 10px; border-radius: 50%; background: var(--btn); }
+    .menu-count { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; background: var(--amber); color: #2B1A0C; font-size: 11px; font-weight: 700; line-height: 20px; text-align: center; }
     /* ── Ladebildschirm ─────────────────────────────── */
     #splash{position:fixed;inset:0;z-index:9999;background:#FEECD0;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;transition:opacity .4s}
     #splash.weg{opacity:0;pointer-events:none}
@@ -281,6 +305,7 @@
       </div>
       <div class="header-actions">
         <button class="hbtn" id="view-toggle-btn" onclick="toggleView()" title="Ansicht wechseln"><svg width="19" height="19" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></button>
+        <button class="hbtn" id="einkauf-btn" onclick="eOpenEntry()" title="Einkaufsliste"><svg width="19" height="19" viewBox="0 0 24 24"><path d="m15 11-1 9M19 11l-4-7M2 11h20M3.5 11l1.6 7.4a2 2 0 0 0 2 1.6h9.8a2 2 0 0 0 2-1.6l1.7-7.4M4.5 15.5h15M5 11l4-7M9 11l1 9"/></svg></button>
         <div class="btn-wrap">
           <button class="hbtn" id="gedanken-btn" onclick="openGedanken()" title="Gedanken"><svg width="19" height="19" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></button>
           <span class="icon-badge" id="gedanken-badge" hidden>0</span>
@@ -289,6 +314,7 @@
           <button class="hbtn" id="menu-btn" onclick="toggleMenu(event)" title="Mehr"><svg width="19" height="19" viewBox="0 0 24 24"><path d="M5 12h.01M12 12h.01M19 12h.01" stroke-width="3"/></svg></button>
           <div class="menu" id="menu" onclick="event.stopPropagation()">
             <button class="menu-item" id="refresh-btn" onclick="closeMenu();loadPlan()"><span>Aktualisieren</span><span id="refresh-icon" style="display:inline-flex"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16M8 16H3v5"/></svg></span></button>
+            <button class="menu-item" id="wagen-item" onclick="closeMenu();eOpenWagen()"><span>Einkaufswagen</span><span class="menu-count" id="wagen-count" hidden>0</span></button>
             <div class="menu-sep"></div>
             <div class="menu-label">Darstellung</div>
             <button class="menu-item" data-mode="auto" onclick="setThemeMode('auto')"><span>Auto</span><svg class="chk" width="16" height="16" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></button>
@@ -338,6 +364,26 @@
     <input id="gedanken-input" class="form-input" placeholder="z. B. Kaffee kaufen" onkeydown="if(event.key==='Enter')addGedanke()">
     <button onclick="addGedanke()" title="Hinzufügen"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
   </div>
+</div>
+
+<div class="page" id="einkauf-page">
+  <div class="page-head">
+    <button class="back-btn" onclick="ePage('einkauf-page',false)"><span class="hbtn"><svg width="19" height="19" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></span>Wochenplan</button>
+    <div class="page-title">Einkaufsliste</div>
+  </div>
+  <div class="page-body" id="einkauf-body"></div>
+  <div class="page-foot">
+    <input id="einkauf-input" class="form-input" placeholder="z. B. Kaffee" onkeydown="if(event.key==='Enter')eAdd()">
+    <button onclick="eAdd()" title="Hinzufügen"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+  </div>
+</div>
+
+<div class="page" id="wagen-page">
+  <div class="page-head">
+    <button class="back-btn" onclick="ePage('wagen-page',false)"><span class="hbtn"><svg width="19" height="19" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></span>Wochenplan</button>
+    <div class="page-title">Einkaufswagen</div>
+  </div>
+  <div class="page-body" id="wagen-body"></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -760,6 +806,90 @@ function dbToDisplay(r) {
     'Kohlenhydrate': r.kohlenhydrate  || '',
     'Mengenangaben (2 Personen)': r.mengen || ''
   };
+}
+
+// ── Einkaufsliste (Backend; Oberfläche definiert renderEinkauf/renderWagen) ──
+
+// <einkauf-pure>
+function parseZutaten(mengen) {
+  // Komma nicht zwischen Ziffern trennen ("1,5 kg Äpfel")
+  return String(mengen || '').split(/,(?!\d)\s*/).map(function(t) {
+    var n = t.trim().replace(/^[\d.,\/½¼¾\s]*(?:(?:g|kg|ml|l|EL|TL|Stück|Kopf|Dose|Bund|Pkg\.?)\s+)?/i, '').trim();
+    return n ? n[0].toUpperCase() + n.slice(1) : '';
+  }).filter(Boolean);
+}
+
+function zaehleZutaten(rows) {
+  var m = {};
+  rows.forEach(function(r) {
+    var seen = {};
+    parseZutaten(r['Mengenangaben (2 Personen)']).forEach(function(n) {
+      var k = n.toLowerCase();
+      if (seen[k]) return;
+      seen[k] = 1;
+      (m[k] = m[k] || { name: n, tage: 0 }).tage++;
+    });
+  });
+  return Object.values(m).sort(function(a, b) { return a.name.localeCompare(b.name, 'de'); });
+}
+
+function chargeLabel(weekIdx, mondayOffset) {
+  var mon = getMondayOffset(mondayOffset), sun = new Date(mon);
+  sun.setDate(mon.getDate() + 6);
+  return 'Woche ' + (weekIdx + 1) + ' · ' + fmtD(mon) + '–' + fmtD(sun);
+}
+// </einkauf-pure>
+
+var einkauf = [];   // alle Zeilen der Gruppe: { id, name, tage, im_wagen, charge }
+
+async function loadEinkauf() {
+  if (!currentGroup) return;
+  var r = await sb.from('einkaufsliste').select('*').eq('gruppe_id', currentGroup.id).order('id');
+  if (r.error) { console.warn('Einkaufsliste:', r.error.message); return; }
+  einkauf = r.data || [];
+  updateWagenBadge();
+  if (typeof renderEinkauf === 'function') renderEinkauf();
+  if (typeof renderWagen === 'function') renderWagen();
+}
+
+// Führt eine Schreibabfrage aus, meldet Fehler und lädt danach neu. true = ok.
+async function einkaufSchreiben(query) {
+  var r = await query;
+  if (r.error) { alert('Fehler: ' + r.error.message); return false; }
+  await loadEinkauf();
+  return true;
+}
+
+function addEinkaufBatch(items, charge) {
+  return einkaufSchreiben(sb.from('einkaufsliste').insert(items.map(function(i) {
+    return { gruppe_id: currentGroup.id, name: i.name, tage: i.tage, charge: charge };
+  })));
+}
+function updateEinkauf(id, patch) { return einkaufSchreiben(sb.from('einkaufsliste').update(patch).eq('id', id)); }
+function deleteEinkauf(id)        { return einkaufSchreiben(sb.from('einkaufsliste').delete().eq('id', id)); }
+function leereWagen() {
+  return einkaufSchreiben(sb.from('einkaufsliste').delete().eq('gruppe_id', currentGroup.id).eq('im_wagen', true));
+}
+
+function updateWagenBadge() {
+  var el = document.getElementById('wagen-count');
+  if (!el) return;
+  var n = einkauf.filter(function(e) { return e.im_wagen; }).length;
+  el.textContent = n;
+  el.hidden = n === 0;
+}
+
+// start: 0 = ab dieser Woche, 1 = ab nächster; anzahl: 1, 2 oder 4 Wochen. Liefert Anzahl neuer Kacheln.
+async function erstelleEinkauf(start, anzahl) {
+  var cur = getCurrentPlanIdx(), n = 0;
+  for (var k = start; k < start + anzahl; k++) {
+    var idx = (cur + k) % 4;
+    var items = zaehleZutaten(allWeeks[idx] || []);
+    if (!items.length) continue;
+    if (!(await addEinkaufBatch(items, chargeLabel(idx, k)))) return n;
+    n += items.length;
+  }
+  return n;
 }
 
 // ── Gruppen ───────────────────────────────────────────────────────────────
@@ -1232,6 +1362,146 @@ function esc(s) {
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js').catch(function() {});
+}
+
+// ── Einkaufsliste ─────────────────────────────────────────────────────────
+
+Object.assign(PATHS, {
+  trash:'<path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+  cart:'<path d="M8 22a1 1 0 1 0 0-2 1 1 0 0 0 0 2ZM19 22a1 1 0 1 0 0-2 1 1 0 0 0 0 2ZM2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>'
+});
+var eSel = 0;
+function ePage(id, show) { document.getElementById(id).classList.toggle('show', show); }
+function eOpenEntry() {
+  closeMenu();
+  if (einkauf.some(function(r) { return !r.im_wagen; })) eOpenList(); else eOpenCreate();
+}
+function eOpenList() { closeModal(); renderEinkauf(); ePage('wagen-page', false); ePage('einkauf-page', true); }
+function eOpenWagen() { closeModal(); renderWagen(); ePage('einkauf-page', false); ePage('wagen-page', true); }
+
+function tileHtml(r, swipe) {
+  return '<div class="tile-wrap" data-id="' + r.id + '">' +
+    (swipe ? '<div class="tile-bg buy">' + ic('cart', 24) + '</div><div class="tile-bg del">' + ic('trash', 24) + '</div>' : '') +
+    '<div class="tile' + (swipe ? '' : ' static') + '"' + (swipe ? ' onclick="eTap(this,' + r.id + ')"' : '') + '>' +
+      '<span class="t-name">' + esc(r.name) + '</span>' +
+      (r.tage ? '<span class="t-days">' + r.tage + (Number(r.tage) === 1 ? ' Tag' : ' Tage') + '</span>' : '') +
+    '</div></div>';
+}
+function eGroups(rows) {
+  var order = [], map = {};
+  rows.forEach(function(r) {
+    var k = r.charge || '';
+    if (!map[k]) { map[k] = []; order.push(k); }
+    map[k].push(r);
+  });
+  order.sort(function(a, b) { return (a === '') - (b === ''); });
+  return order.map(function(k) { return { title: k || 'Eigene Einträge', rows: map[k] }; });
+}
+function renderEinkauf() {
+  var body = document.getElementById('einkauf-body');
+  if (!body) return;
+  var rows = einkauf.filter(function(r) { return !r.im_wagen; });
+  var wn = einkauf.length - rows.length;
+  var html = '<div class="g-note"><div class="g-note-text">Neue Liste<small>Aus gewählten Wochen erstellen</small></div><button onclick="eOpenCreate()">Erstellen</button></div>';
+  if (wn > 0) html += '<div class="g-note"><div class="g-note-text">Einkaufswagen<small>' + wn + (wn === 1 ? ' Eintrag' : ' Einträge') + '</small></div><button onclick="eOpenWagen()">Öffnen</button></div>';
+  if (!rows.length) html += '<div class="e-empty"><div class="empty-title">Die Einkaufsliste ist leer.</div></div>';
+  else html += eGroups(rows).map(function(g) { return '<div class="e-group">' + esc(g.title) + '</div><div class="e-tiles">' + g.rows.map(function(r) { return tileHtml(r, true); }).join('') + '</div>'; }).join('');
+  body.innerHTML = html;
+  body.querySelectorAll('.tile-wrap').forEach(eSwipe);
+}
+function renderWagen() {
+  var body = document.getElementById('wagen-body');
+  if (!body) return;
+  var rows = einkauf.filter(function(r) { return r.im_wagen; });
+  if (!rows.length) { body.innerHTML = '<div class="e-empty"><div class="empty-title">Der Einkaufswagen ist leer.</div></div>'; return; }
+  body.innerHTML = '<button class="btn-danger" onclick="eClearWagen()">Wagen leeren</button>' +
+    '<div class="e-group">' + rows.length + (rows.length === 1 ? ' Eintrag' : ' Einträge') + '</div><div class="e-tiles">' + rows.map(function(r) { return tileHtml(r, false); }).join('') + '</div>';
+}
+
+function eSwipe(wrap) {
+  var t = wrap.querySelector('.tile'), bd = wrap.querySelector('.tile-bg.del'), bb = wrap.querySelector('.tile-bg.buy');
+  var id = Number(wrap.dataset.id), sx = 0, sy = 0, dx = 0, lock = null, TH = 100;
+  t.addEventListener('touchstart', function(e) {
+    sx = e.touches[0].clientX; sy = e.touches[0].clientY; dx = 0; lock = null; t._moved = false; t.style.transition = 'none';
+  }, { passive: true });
+  t.addEventListener('touchmove', function(e) {
+    dx = e.touches[0].clientX - sx;
+    var dy = e.touches[0].clientY - sy;
+    if (!lock && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) lock = Math.abs(dx) > Math.abs(dy) * 1.2 ? 'x' : 'y';
+    if (lock !== 'x') return;
+    e.preventDefault(); t._moved = true;
+    t.style.transform = 'translateX(' + dx + 'px)';
+    var o = Math.min(1, Math.abs(dx) / TH);
+    bd.style.opacity = dx < 0 ? o : 0; bb.style.opacity = dx > 0 ? o : 0;
+  }, { passive: false });
+  function end() {
+    if (lock !== 'x') return;
+    if (Math.abs(dx) > TH) {
+      var dir = dx < 0 ? -1 : 1;
+      t.style.transition = 'transform .22s ease'; t.style.transform = 'translateX(' + dir * (wrap.offsetWidth + 20) + 'px)';
+      if (navigator.vibrate) navigator.vibrate(20);
+      setTimeout(function() { wrap.classList.add('gone'); }, 120);
+      setTimeout(function() { dir < 0 ? eDelete(id) : eToWagen(id); }, 340);
+    } else {
+      t.style.transition = 'transform .35s cubic-bezier(.34,1.56,.64,1)'; t.style.transform = '';
+      bd.style.transition = bb.style.transition = 'opacity .25s'; bd.style.opacity = bb.style.opacity = 0;
+    }
+    setTimeout(function() { t._moved = false; }, 60);
+  }
+  t.addEventListener('touchend', end);
+  t.addEventListener('touchcancel', end);
+}
+function eTap(el, id) { if (!el._moved) eOpenEdit(id); }
+
+function eDelete(id) { return deleteEinkauf(id); }
+function eToWagen(id) { return updateEinkauf(id, { im_wagen: true }); }
+async function eClearWagen() {
+  if (confirm('Einkaufswagen leeren? Alle Einträge im Wagen werden gelöscht.')) await leereWagen();
+}
+async function eAdd() {
+  var input = document.getElementById('einkauf-input'), name = input.value.trim();
+  if (!name) return;
+  if (await addEinkaufBatch([{ name: name, tage: null }], '')) input.value = '';
+}
+
+function eOpenEdit(id) {
+  var r = einkauf.filter(function(x) { return x.id === id; })[0];
+  if (!r) return;
+  document.getElementById('sheet-inner').innerHTML =
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div style="font-family:\'Newsreader\',serif;font-size:26px">Bearbeiten</div>' +
+    '<button class="btn-del" onclick="eDelete(' + id + ');closeModal()">Löschen</button></div>' +
+    '<label class="form-label">Name</label><input id="e-name" class="form-input" value="' + esc(r.name).replace(/"/g, '&quot;') + '">' +
+    '<label class="form-label">Anzahl Tage</label><input id="e-tage" class="form-input" type="number" inputmode="numeric" min="1" value="' + (r.tage || '') + '">' +
+    '<div style="display:flex;gap:8px;margin-top:16px"><button class="btn-save" onclick="eSave(' + id + ')">Speichern</button><button class="btn-cancel" onclick="closeModal()">Abbrechen</button></div>';
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById('sheet').classList.add('show');
+}
+async function eSave(id) {
+  var name = document.getElementById('e-name').value.trim(), t = document.getElementById('e-tage').value;
+  if (!name) return;
+  var patch = { name: name, tage: t === '' ? null : Number(t) };
+  if (await updateEinkauf(id, patch)) closeModal();
+}
+
+var E_OPTS = ['Diese Woche', 'Nächste Woche', 'Diese + nächste', 'Alle 4'];
+function eOpenCreate() {
+  eSel = 0;
+  document.getElementById('sheet-inner').innerHTML =
+    '<div style="font-family:\'Newsreader\',serif;font-size:26px;margin-bottom:6px">Einkaufsliste erstellen</div>' +
+    '<div style="font-size:14px;color:var(--ink2);margin-bottom:8px">Aus welchen Wochen sollen die Zutaten kommen?</div>' +
+    E_OPTS.map(function(o, i) { return '<button class="opt' + (i === 0 ? ' on' : '') + '" onclick="eChoose(' + i + ')"><span class="rad"></span>' + o + '</button>'; }).join('') +
+    '<div style="display:flex;gap:8px;margin-top:18px"><button class="btn-save" onclick="eCreate()">Erstellen</button><button class="btn-cancel" onclick="closeModal()">Abbrechen</button></div>';
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById('sheet').classList.add('show');
+}
+function eChoose(i) { eSel = i; document.querySelectorAll('#sheet-inner .opt').forEach(function(b, j) { b.classList.toggle('on', i === j); }); }
+async function eCreate() {
+  var p = [[0, 1], [1, 1], [0, 2], [0, 4]][eSel];
+  if (await erstelleEinkauf(p[0], p[1]) > 0) { closeModal(); eOpenList(); return; }
+  document.getElementById('sheet-inner').innerHTML =
+    '<div style="text-align:center;padding:18px 0 8px"><div style="font-family:\'Newsreader\',serif;font-size:26px">Keine Zutaten gefunden</div>' +
+    '<div style="font-size:14px;color:var(--ink2);margin-top:8px;line-height:1.5">Für die gewählten Wochen gibt es keine Mengenangaben.</div></div>' +
+    '<div style="display:flex;gap:8px;margin-top:18px"><button class="btn-save" onclick="eOpenCreate()">Andere Auswahl</button><button class="btn-cancel" onclick="closeModal()">Schließen</button></div>';
 }
 
 (async function init() {
