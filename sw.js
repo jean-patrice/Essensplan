@@ -16,8 +16,7 @@ self.addEventListener('fetch', function(e) {
     e.respondWith(
       fetch(e.request, { cache: 'no-store' })
         .then(function(res) {
-          var copy = res.clone();
-          caches.open(CACHE_NAME).then(function(c) { c.put(e.request, copy); });
+          if (res.ok) { var copy = res.clone(); caches.open(CACHE_NAME).then(function(c) { c.put(e.request, copy); }); }
           return res;
         })
         .catch(function() { return caches.match(e.request); })

@@ -40,3 +40,11 @@ test('nurNeue lässt Zutaten weg, die in derselben Charge schon stehen (Liste od
   const items = [{ name: 'reis', tage: 2 }, { name: 'Pute', tage: 1 }, { name: 'Fisch', tage: 1 }];
   assert.deepEqual(nurNeue(items, 'Woche 1', rows), [{ name: 'Pute', tage: 1 }, { name: 'Fisch', tage: 1 }]);
 });
+test('parseZutaten: Bereich, Einheiten, ca., ohne Leerzeichen vor Einheit', () => {
+  assert.deepEqual(parseZutaten('2-3 Paprika'), ['Paprika']);
+  assert.deepEqual(parseZutaten('2 Dosen Tomaten, 1 Liter Milch, 2 Zehen Knoblauch, 1 Prise Salz'), ['Tomaten', 'Milch', 'Knoblauch', 'Salz']);
+  assert.deepEqual(parseZutaten('ca. 400 g Pute, 400g Reis'), ['Pute', 'Reis']);
+});
+test('parseZutaten trennt auch an Zeilenumbruch und Semikolon', () => {
+  assert.deepEqual(parseZutaten('400 g Pute\n600 g Kartoffeln; 150 g Reis'), ['Pute', 'Kartoffeln', 'Reis']);
+});

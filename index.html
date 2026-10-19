@@ -235,18 +235,20 @@
     .menu-item.on .chk { opacity: 1; }
     /* Einkaufsliste */
     .brand-text { min-width: 0; }
+    @media (max-width: 340px) { .brand-text .title { font-size: 22px; } }
+    .brand-text .title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     @media (max-width: 400px) { .hbtn { width: 36px; height: 36px; } .header-actions { gap: 6px; } }
     .e-group { margin: 32px 4px 10px; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink3); }
     .e-group:first-child { margin-top: 0; }
     .e-tiles { display: flex; flex-direction: column; gap: 8px; }
-    .tile-wrap { position: relative; border-radius: 18px; overflow: hidden; flex: none; max-height: 80px; transition: max-height .22s ease, margin .22s ease, opacity .22s ease; }
+    .tile-wrap { position: relative; border-radius: 18px; overflow: hidden; flex: none; max-height: 300px; transition: max-height .22s ease, margin .22s ease, opacity .22s ease; }
     .tile-wrap.gone { max-height: 0; margin-top: -8px; opacity: 0; }
     .tile-bg { position: absolute; inset: 0; display: flex; align-items: center; opacity: 0; color: #FFF9E2; padding: 0 22px; }
     .tile-bg.del { background: var(--danger); justify-content: flex-end; }
     .tile-bg.buy { background: #4F6B3F; justify-content: flex-start; }
     .tile { position: relative; min-height: 56px; background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; touch-action: pan-y; user-select: none; -webkit-user-select: none; cursor: pointer; }
     .tile.static { cursor: default; }
-    .t-name { font-family: 'Newsreader', Georgia, serif; font-size: 19px; line-height: 1.2; }
+    .t-name { font-family: 'Newsreader', Georgia, serif; font-size: 19px; line-height: 1.2; min-width: 0; overflow-wrap: anywhere; }
     .t-days { flex: none; font-size: 12px; color: var(--ink3); }
     .e-empty { padding: 56px 24px; text-align: center; color: var(--ink3); }
     .e-empty .empty-title { font-family: 'Newsreader', Georgia, serif; font-size: 24px; color: var(--ink); margin-bottom: 6px; }
@@ -817,9 +819,9 @@ function dbToDisplay(r) {
 
 // <einkauf-pure>
 function parseZutaten(mengen) {
-  // Komma nicht zwischen Ziffern trennen ("1,5 kg Äpfel")
-  return String(mengen || '').split(/,(?!\d)\s*/).map(function(t) {
-    var n = t.trim().replace(/^[\d.,\/½¼¾\s]*(?:(?:g|kg|ml|l|EL|TL|Stück|Kopf|Dose|Bund|Pkg\.?)\s+)?/i, '').trim();
+  // getrennt wird an Komma (nicht zwischen Ziffern: "1,5 kg"), Semikolon und Zeilenumbruch
+  return String(mengen || '').split(/\s*(?:[;\n]|,(?!\d))\s*/).map(function(t) {
+    var n = t.trim().replace(/^(?:ca\.?\s*)?(?:(?:\d+(?:[.,\/]\d+)?(?:\s*[-–]\s*\d+(?:[.,\/]\d+)?)?|[½¼¾])\s*)?(?:(?:g|kg|ml|l|EL|TL|Stück|St\.|Kopf|Dosen?|Bund|Pkg\.?|Pck\.?|Packung(?:en)?|Liter|Zehen?|Prisen?|Becher)\s+)?/i, '').trim();
     return n ? n[0].toUpperCase() + n.slice(1) : '';
   }).filter(Boolean);
 }
@@ -854,9 +856,12 @@ function nurNeue(items, charge, rows) {
 
 var einkauf = [];   // alle Zeilen der Gruppe: { id, name, tage, im_wagen, charge }
 
+var einkaufLadeNr = 0;
 async function loadEinkauf() {
   if (!currentGroup) return;
+  var nr = ++einkaufLadeNr;
   var r = await sb.from('einkaufsliste').select('*').eq('gruppe_id', currentGroup.id).order('id');
+  if (nr !== einkaufLadeNr) return;   // ein neuerer Ladevorgang läuft/ist fertig
   if (r.error) { console.warn('Einkaufsliste:', r.error.message); return; }
   einkauf = r.data || [];
   updateWagenBadge();
@@ -867,7 +872,11 @@ async function loadEinkauf() {
 // Führt eine Schreibabfrage aus, meldet Fehler und lädt danach neu. true = ok.
 async function einkaufSchreiben(query) {
   var r = await query;
-  if (r.error) { alert('Fehler: ' + r.error.message); return false; }
+  if (r.error) {
+    alert('Fehler: ' + r.error.message);
+    if (typeof renderEinkauf === 'function') renderEinkauf();   // ausgeblendete Kachel wieder zeigen
+    return false;
+  }
   await loadEinkauf();
   return true;
 }
@@ -943,6 +952,7 @@ async function onGroupChange(id) {
   currentGroup = result.data;
   localStorage.setItem(GROUP_KEY, id);
   await loadPlan();
+  await loadEinkauf();
 }
 
 async function createGroup() {
@@ -1307,6 +1317,9 @@ function updateNavButtons() {
 
 document.addEventListener('keydown', function(e) {
   if (document.getElementById('gedanken-page').classList.contains('show')) { if (e.key === 'Escape') closePage(); return; }
+  if (document.getElementById('sheet').classList.contains('show')) { if (e.key === 'Escape') closeModal(); return; }
+  var offen = ['einkauf-page', 'wagen-page'].filter(function(id) { return document.getElementById(id).classList.contains('show'); })[0];
+  if (offen) { if (e.key === 'Escape') ePage(offen, false); return; }
   if (document.getElementById('sheet').classList.contains('show')) {
     if (e.key === 'Escape') { closeModal(); }
     return;
@@ -1388,8 +1401,9 @@ Object.assign(PATHS, {
 });
 var eSel = 0;
 function ePage(id, show) { document.getElementById(id).classList.toggle('show', show); }
-function eOpenEntry() {
+async function eOpenEntry() {
   closeMenu();
+  await loadEinkauf();
   if (einkauf.some(function(r) { return !r.im_wagen; })) eOpenList(); else eOpenCreate();
 }
 // Zwischen Liste und Wagen ohne Gleit-Animation wechseln (fühlt sich wie ein Umschalter an)
@@ -1444,7 +1458,7 @@ function renderWagen() {
   var rows = einkauf.filter(function(r) { return r.im_wagen; });
   if (!rows.length) { body.innerHTML = eSeg('wagen') + '<div class="e-empty"><div class="empty-title">Der Einkaufswagen ist leer.</div></div>'; return; }
   body.innerHTML = eSeg('wagen') + '<button class="btn-danger" onclick="eClearWagen()">Wagen leeren</button>' +
-    '<div class="e-group">' + rows.length + (rows.length === 1 ? ' Eintrag' : ' Einträge') + '</div><div class="e-tiles">' + rows.map(function(r) { return tileHtml(r, false); }).join('') + '</div>';
+    eGroups(rows).map(function(g) { return '<div class="e-group">' + esc(g.title) + '</div><div class="e-tiles">' + g.rows.map(function(r) { return tileHtml(r, false); }).join('') + '</div>'; }).join('');
 }
 
 function eSwipe(wrap) {
@@ -1463,9 +1477,9 @@ function eSwipe(wrap) {
     var o = Math.min(1, Math.abs(dx) / TH);
     bd.style.opacity = dx < 0 ? o : 0; bb.style.opacity = dx > 0 ? o : 0;
   }, { passive: false });
-  function end() {
+  function end(e) {
     if (lock !== 'x') return;
-    if (Math.abs(dx) > TH) {
+    if (Math.abs(dx) > TH && e.type !== 'touchcancel') {
       var dir = dx < 0 ? -1 : 1;
       t.style.transition = 'transform .22s ease'; t.style.transform = 'translateX(' + dir * (wrap.offsetWidth + 20) + 'px)';
       if (navigator.vibrate) navigator.vibrate(20);
@@ -1490,10 +1504,13 @@ async function eClearListe() {
 async function eClearWagen() {
   if (confirm('Einkaufswagen leeren? Alle Einträge im Wagen werden gelöscht.')) await leereWagen();
 }
+var eBusy = false;   // sperrt Doppeltippen während eines Schreibvorgangs
 async function eAdd() {
   var input = document.getElementById('einkauf-input'), name = input.value.trim();
-  if (!name) return;
-  if (await addEinkaufBatch([{ name: name, tage: null }], '')) input.value = '';
+  if (!name || eBusy) return;
+  eBusy = true; input.value = '';
+  try { if (!(await addEinkaufBatch([{ name: name, tage: null }], ''))) input.value = name; }
+  finally { eBusy = false; }
 }
 
 function eOpenEdit(id) {
@@ -1510,7 +1527,8 @@ function eOpenEdit(id) {
 }
 async function eSave(id) {
   var name = document.getElementById('e-name').value.trim(), t = document.getElementById('e-tage').value;
-  if (!name) return;
+  if (!name) { alert('Bitte einen Namen eingeben.'); return; }
+  if (t !== '' && !/^[1-9]\d*$/.test(t)) { alert('Anzahl Tage: ganze Zahl ab 1 (oder leer lassen).'); return; }
   var patch = { name: name, tage: t === '' ? null : Number(t) };
   if (await updateEinkauf(id, patch)) closeModal();
 }
@@ -1528,8 +1546,11 @@ function eOpenCreate() {
 }
 function eChoose(i) { eSel = i; document.querySelectorAll('#sheet-inner .opt').forEach(function(b, j) { b.classList.toggle('on', i === j); }); }
 async function eCreate() {
-  var p = [[0, 1], [1, 1], [0, 2], [0, 4]][eSel];
-  if (await erstelleEinkauf(p[0], p[1]) > 0) { closeModal(); eOpenList(); return; }
+  if (eBusy) return;
+  eBusy = true;
+  var p = [[0, 1], [1, 1], [0, 2], [0, 4]][eSel], n;
+  try { n = await erstelleEinkauf(p[0], p[1]); } finally { eBusy = false; }
+  if (n > 0) { closeModal(); eOpenList(); return; }
   document.getElementById('sheet-inner').innerHTML =
     '<div style="text-align:center;padding:18px 0 8px"><div style="font-family:\'Newsreader\',serif;font-size:26px">Nichts hinzugefügt</div>' +
     '<div style="font-size:14px;color:var(--ink2);margin-top:8px;line-height:1.5">Die Zutaten der gewählten Wochen stehen schon in der Liste oder im Wagen, oder es gibt keine Mengenangaben.</div></div>' +
@@ -1555,9 +1576,10 @@ async function eCreate() {
   });
 
   await refreshGedankenBadge();
-  setInterval(refreshGedankenBadge, 45000);
+  await loadEinkauf();
+  setInterval(function() { refreshGedankenBadge(); loadEinkauf(); }, 45000);
   document.addEventListener('visibilitychange', function() {
-    if (document.visibilityState === 'visible') refreshGedankenBadge();
+    if (document.visibilityState === 'visible') { refreshGedankenBadge(); loadEinkauf(); }
   });
 })();
 </script>
