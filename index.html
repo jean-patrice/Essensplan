@@ -255,6 +255,10 @@
     .opt.on { border-color: var(--btn); background: var(--nut-s); }
     .opt.on .rad { border-color: var(--btn); }
     .opt.on .rad::after { content: ''; width: 10px; height: 10px; border-radius: 50%; background: var(--btn); }
+    .seg { display: flex; padding: 4px; gap: 4px; border-radius: 22px; background: var(--nut-s); flex: none; }
+    .seg button { flex: 1; height: 40px; border: none; border-radius: 18px; background: none; color: var(--ink2); font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .seg button.on { background: var(--btn); color: var(--btn-ink); font-weight: 500; }
+    .seg .menu-count { background: var(--amber); }
     .menu-count { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; background: var(--amber); color: #2B1A0C; font-size: 11px; font-weight: 700; line-height: 20px; text-align: center; }
     /* ── Ladebildschirm ─────────────────────────────── */
     #splash{position:fixed;inset:0;z-index:9999;background:#FEECD0;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;transition:opacity .4s}
@@ -1376,9 +1380,22 @@ function eOpenEntry() {
   closeMenu();
   if (einkauf.some(function(r) { return !r.im_wagen; })) eOpenList(); else eOpenCreate();
 }
-function eOpenList() { closeModal(); renderEinkauf(); ePage('wagen-page', false); ePage('einkauf-page', true); }
-function eOpenWagen() { closeModal(); renderWagen(); ePage('einkauf-page', false); ePage('wagen-page', true); }
+// Zwischen Liste und Wagen ohne Gleit-Animation wechseln (fühlt sich wie ein Umschalter an)
+function eSwitch(from, to, render) {
+  closeModal(); render();
+  var a = document.getElementById(from), b = document.getElementById(to), both = a.classList.contains('show');
+  if (both) { a.style.transition = b.style.transition = 'none'; }
+  ePage(from, false); ePage(to, true);
+  if (both) setTimeout(function() { a.style.transition = b.style.transition = ''; }, 50);
+}
+function eOpenList()  { eSwitch('wagen-page', 'einkauf-page', renderEinkauf); }
+function eOpenWagen() { eSwitch('einkauf-page', 'wagen-page', renderWagen); }
 
+function eSeg(active) {
+  var n = einkauf.filter(function(r) { return r.im_wagen; }).length;
+  return '<div class="seg"><button class="' + (active === 'liste' ? 'on' : '') + '" onclick="eOpenList()">Liste</button>' +
+    '<button class="' + (active === 'wagen' ? 'on' : '') + '" onclick="eOpenWagen()">Wagen' + (n ? ' <span class="menu-count">' + n + '</span>' : '') + '</button></div>';
+}
 function tileHtml(r, swipe) {
   return '<div class="tile-wrap" data-id="' + r.id + '">' +
     (swipe ? '<div class="tile-bg buy">' + ic('cart', 24) + '</div><div class="tile-bg del">' + ic('trash', 24) + '</div>' : '') +
@@ -1401,9 +1418,7 @@ function renderEinkauf() {
   var body = document.getElementById('einkauf-body');
   if (!body) return;
   var rows = einkauf.filter(function(r) { return !r.im_wagen; });
-  var wn = einkauf.length - rows.length;
-  var html = '<div class="g-note"><div class="g-note-text">Neue Liste<small>Aus gewählten Wochen erstellen</small></div><button onclick="eOpenCreate()">Erstellen</button></div>';
-  if (wn > 0) html += '<div class="g-note"><div class="g-note-text">Einkaufswagen<small>' + wn + (wn === 1 ? ' Eintrag' : ' Einträge') + '</small></div><button onclick="eOpenWagen()">Öffnen</button></div>';
+  var html = eSeg('liste') + '<div class="g-note"><div class="g-note-text">Neue Liste<small>Aus gewählten Wochen erstellen</small></div><button onclick="eOpenCreate()">Erstellen</button></div>';
   if (!rows.length) html += '<div class="e-empty"><div class="empty-title">Die Einkaufsliste ist leer.</div></div>';
   else html += eGroups(rows).map(function(g) { return '<div class="e-group">' + esc(g.title) + '</div><div class="e-tiles">' + g.rows.map(function(r) { return tileHtml(r, true); }).join('') + '</div>'; }).join('');
   body.innerHTML = html;
@@ -1413,8 +1428,8 @@ function renderWagen() {
   var body = document.getElementById('wagen-body');
   if (!body) return;
   var rows = einkauf.filter(function(r) { return r.im_wagen; });
-  if (!rows.length) { body.innerHTML = '<div class="e-empty"><div class="empty-title">Der Einkaufswagen ist leer.</div></div>'; return; }
-  body.innerHTML = '<button class="btn-danger" onclick="eClearWagen()">Wagen leeren</button>' +
+  if (!rows.length) { body.innerHTML = eSeg('wagen') + '<div class="e-empty"><div class="empty-title">Der Einkaufswagen ist leer.</div></div>'; return; }
+  body.innerHTML = eSeg('wagen') + '<button class="btn-danger" onclick="eClearWagen()">Wagen leeren</button>' +
     '<div class="e-group">' + rows.length + (rows.length === 1 ? ' Eintrag' : ' Einträge') + '</div><div class="e-tiles">' + rows.map(function(r) { return tileHtml(r, false); }).join('') + '</div>';
 }
 
